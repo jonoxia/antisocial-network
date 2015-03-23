@@ -1,0 +1,30 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html>
+<head>
+<title>The Antisocial Network</title>
+</head>
+
+<body>
+<h1>The Antisocial Network</h1>
+<div id="left-column">
+<div class="boxed">
+  <h3>Log In:</h3>
+  <form method="post" action="{% url 'django.contrib.auth.views.login' %}">
+  {% csrf_token %}
+  <table>
+    <tr>
+      <td><label for="id_username">Username:</label></td>
+      <td><input id="id_username" maxlength="254" name="username" type="text" /></td>
+    </tr>
+    <tr>
+      <td><label for="id_password">Password:</label></td>
+      <td><input id="id_password" name="password" type="password" /></td>
+    </tr>
+  </table>
+  <input type="submit" name="login" value="Login" />
+  </form>
+</div>
+<a href="{% url 'create_account' %}">Sign Up</a><br>
+</div>
+</body>
+</html>
