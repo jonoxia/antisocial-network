@@ -1,6 +1,15 @@
 {% extends "common/base.html" %}
 {% block content %}
 
-Person page for {{ person }}
+Person page for {{ person.publicName }}
+
+<img src="{{ person.pictureUrl }}">
+
+<h2>Bio</h2>
+<p>{{ person.bio }}</p>
+
+{% if editable %}
+  <a href="/{{person.publicName}}/edit">Edit</a>
+{% endif %}
 
 {% endblock %}

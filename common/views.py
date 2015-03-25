@@ -9,6 +9,7 @@ from django.db import IntegrityError
 from django.contrib.auth.models import User
  
 from common.forms import CreateAccountForm
+from gallery.models import Human
 
 def login_profile_redirect(request):
     # Default page to go to upon login if "next" param is not specified:
@@ -24,7 +25,6 @@ def index_page(request):
         context_instance=RequestContext(request))
 
 def create_account(request):
-    # anyone can create a teacher account
     errorMsg = ""
     if request.method == "POST":
         form = CreateAccountForm(request.POST)
@@ -41,6 +41,10 @@ def create_account(request):
                     user = authenticate(username=username, password=password)
                     if user is not None:
                         if user.is_active:
+                            Human.objects.create(account = user,
+                                                 pictureUrl = "your picture here",
+                                                 publicName = username,
+                                                 bio = "your bio here")
                             login(request, user)
                             return redirect("/%s/edit" % user.username)
             except IntegrityError as e:

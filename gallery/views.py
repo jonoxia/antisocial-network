@@ -6,8 +6,19 @@ from django.template import RequestContext
 from gallery.models import PRIVACY_SETTINGS
 from gallery.models import Human, Gallery, Work
 
-def person_page(request, person):
+def person_page(request, personName):
+
+    matches = Human.objects.filter(publicName = personName)
+    if len(matches) == 0:
+        return render_to_response('gallery/404.html', {},
+                        context_instance=RequestContext(request))
+    person = matches[0]
     data = {"person": person}
+    if request.user == person.account:
+        data["editable"] = True
+    else:
+        data["editable"] = False
+
     return render_to_response('gallery/personpage.html', data,
                     context_instance=RequestContext(request))
 
@@ -22,8 +33,17 @@ def work_page(request, person, gallery, work):
     return render_to_response('gallery/workpage.html', data,
                     context_instance=RequestContext(request))
 
-def edit_my_profile(request, person):
+def edit_my_profile(request, personName):
+    matches = Human.objects.filter(publicName = personName)
+    if len(matches) == 0:
+        return render_to_response('gallery/404.html', {},
+                        context_instance=RequestContext(request))
+    person = matches[0]
     data = {"person": person}
+    if request.user != person.account:
+        # Only I can edit my account:
+        return redirect("/%s" % (personName) )
+    
     return render_to_response('gallery/editprofile.html', data,
                     context_instance=RequestContext(request))
 
