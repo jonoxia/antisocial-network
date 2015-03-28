@@ -1,6 +1,13 @@
 {% extends "common/base.html" %}
 {% block content %}
 
-Gallery page for person {{ person }} gallery {{ gallery }}.
+<h2>Gallery {{ gallery.title }}</h2>
+<p>By {{ person.publicName }}.</p>
 
+<p>{{ gallery.blurb }}</p>
+
+{% if editable %}
+  <a href="/{{person.publicName}}/{{gallery.title}}/edit">Edit Gallery</a>
+<!-- future: link to add new work to gallery -->
+{% endif %}
 {% endblock %}

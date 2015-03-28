@@ -3,17 +3,22 @@ from django.http import HttpResponse
 from django.shortcuts import render_to_response
 from django.shortcuts import redirect
 from django.template import RequestContext
+
 from gallery.models import PRIVACY_SETTINGS
 from gallery.models import Human, Gallery, Work
+from gallery.forms import EditProfileForm
+from gallery.forms import EditGalleryForm
+
 
 def person_page(request, personName):
-
     matches = Human.objects.filter(publicName = personName)
     if len(matches) == 0:
         return render_to_response('gallery/404.html', {},
                         context_instance=RequestContext(request))
     person = matches[0]
-    data = {"person": person}
+    galleries = Gallery.objects.filter(author = person)
+
+    data = {"person": person, "galleries": galleries}
     if request.user == person.account:
         data["editable"] = True
     else:
@@ -22,8 +27,24 @@ def person_page(request, personName):
     return render_to_response('gallery/personpage.html', data,
                     context_instance=RequestContext(request))
 
-def gallery_page(request, person, gallery):
+
+def gallery_page(request, personName, galleryTitle):
+    matches = Human.objects.filter(publicName = personName)
+    if len(matches) == 0:
+        return render_to_response('gallery/404.html', {},
+                        context_instance=RequestContext(request))
+    person = matches[0]
+    matches = Gallery.objects.filter(title = galleryTitle,
+                                     author = person)
+    if len(matches) == 0:
+        return render_to_response('gallery/404.html', {},
+                        context_instance=RequestContext(request))
+    gallery = matches[0]
     data = {"person": person, "gallery": gallery}
+    if request.user == person.account:
+        data["editable"] = True
+    else:
+        data["editable"] = False
     return render_to_response('gallery/gallerypage.html', data,
                     context_instance=RequestContext(request))
 
@@ -39,21 +60,58 @@ def edit_my_profile(request, personName):
         return render_to_response('gallery/404.html', {},
                         context_instance=RequestContext(request))
     person = matches[0]
-    data = {"person": person}
     if request.user != person.account:
         # Only I can edit my account:
         return redirect("/%s" % (personName) )
-    
+
+    if request.method == "POST":
+        form = EditProfileForm(request.POST)
+        if form.is_valid():
+            bio = form.cleaned_data["bio"]
+            person.bio = bio
+            person.save()
+            return redirect("/%s" % (personName))
+    else:
+        form = EditProfileForm(initial = {"bio": person.bio})
+    data = {"form": form, "errorMsg": "", "person": person}
     return render_to_response('gallery/editprofile.html', data,
                     context_instance=RequestContext(request))
 
 
-def new_gallery(request, person):
-    data = {"person": person}
+def new_gallery(request, personName):
+    errorMsg = ""
+    matches = Human.objects.filter(publicName = personName)
+    if len(matches) == 0:
+        return render_to_response('gallery/404.html', {},
+                        context_instance=RequestContext(request))
+    person = matches[0]
+    if request.user != person.account:
+        # Only I can create new galleries under my name:
+        return redirect("/%s" % (personName) )
+
+    if request.method == "POST":
+        form = EditGalleryForm(request.POST)
+        if form.is_valid():
+            title = form.cleaned_data["title"]
+            blurb = form.cleaned_data["blurb"]
+
+            # Is there already a gallery with this title?
+            matches = Gallery.objects.filter(author = person, title = title)
+            if len(matches) > 0:
+                errorMsg = "You already have a gallery called %s" % title
+            else:
+                gallery = Gallery.objects.create(author = person,
+                                                title = title,
+                                                blurb = blurb)
+                return redirect("/%s/%s" % (personName, title))
+    else:
+        form = EditGalleryForm()
+    data = {"person": person, "form": form, "errorMsg": errorMsg}
     return render_to_response('gallery/newgallery.html', data,
                     context_instance=RequestContext(request))
 
-def edit_gallery(request, person, gallery):
+
+def edit_gallery(request, personName, gallery):
     data = {"person": person, "gallery": gallery}
     return render_to_response('gallery/editgallery.html', data,
                     context_instance=RequestContext(request))

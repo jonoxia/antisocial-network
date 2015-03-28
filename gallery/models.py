@@ -21,6 +21,7 @@ class Gallery(models.Model):
     blurb = models.TextField()
     type = models.TextField()
     theme = models.TextField()
+    # a unique-together constraint of author + title?
     
 class Work(models.Model):
     gallery = models.ForeignKey(Gallery, null=False)

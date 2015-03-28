@@ -8,8 +8,14 @@ Person page for {{ person.publicName }}
 <h2>Bio</h2>
 <p>{{ person.bio }}</p>
 
+<h2>Galleries</h2>
+{% for gallery in galleries %}
+  <p><a href="/{{person.publicName}}/{{gallery.title}}">{{gallery.title}}</a></p>
+{% endfor %}
+
 {% if editable %}
   <a href="/{{person.publicName}}/edit">Edit</a>
+  <a href="/{{person.publicName}}/newgallery">New Gallery</a>
 {% endif %}
 
 {% endblock %}
