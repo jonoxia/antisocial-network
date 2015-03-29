@@ -45,6 +45,10 @@ def gallery_page(request, personName, galleryTitle):
         data["editable"] = True
     else:
         data["editable"] = False
+        # if i'm not the creator, then if it's private, i can't see it
+        if gallery.publicity == "PRI":
+            return redirect("/%s" % (personName) )
+        
     return render_to_response('gallery/gallerypage.html', data,
                     context_instance=RequestContext(request))
 
@@ -94,16 +98,19 @@ def new_gallery(request, personName):
         if form.is_valid():
             title = form.cleaned_data["title"]
             blurb = form.cleaned_data["blurb"]
-
+            publicity = form.cleaned_data["publicity"]
             # Is there already a gallery with this title?
             matches = Gallery.objects.filter(author = person, title = title)
             if len(matches) > 0:
                 errorMsg = "You already have a gallery called %s" % title
             else:
                 gallery = Gallery.objects.create(author = person,
-                                                title = title,
-                                                blurb = blurb)
+                                                 title = title,
+                                                 blurb = blurb,
+                                                 publicity = publicity)
                 return redirect("/%s/%s" % (personName, title))
+        else:
+            raise Exception("Invalid form %s" % str (form.errors))
     else:
         form = EditGalleryForm()
     data = {"person": person, "form": form, "errorMsg": errorMsg}

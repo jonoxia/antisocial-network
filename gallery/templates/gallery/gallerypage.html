@@ -3,6 +3,13 @@
 
 <h2>Gallery {{ gallery.title }}</h2>
 <p>By {{ person.publicName }}.</p>
+{% if gallery.publicity == 'PRI' %}
+    <p>Private Collection</p>
+{% elif gallery.publicity == 'FRO' %}
+    <p>Friends-Only Collection</p>
+{% else %}
+    <p>Public Collection</p>
+{% endif %}
 
 <p>{{ gallery.blurb }}</p>
 

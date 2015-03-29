@@ -124,7 +124,7 @@ class GalleryTestCase(TestCase):
                                       "blurb": "some pics i took in the desert",
                                       "type": "photoset",
                                       "theme": "cloudy",
-                                      "public": True})
+                                      "publicity": "PUB"})
         self.assertEqual(results.status_code, 302)
         self.assertTrue(results.url.endswith, "/kruger/lightning")
 
@@ -142,7 +142,7 @@ class GalleryTestCase(TestCase):
                                       "blurb": "some pics i took in the desert",
                                       "type": "photoset",
                                       "theme": "cloudy",
-                                      "public": True})
+                                      "publicity": "PUB"})
         results = c.get("/kruger")
         self.assertIn('a href="/kruger/lightning"', results.content)
 
@@ -163,7 +163,7 @@ class GalleryTestCase(TestCase):
                                       "blurb": "some pics i took in the desert",
                                       "type": "photoset",
                                       "theme": "cloudy",
-                                      "public": True})
+                                      "publicity": "PUB"})
 
         results = c.post("/accounts/login/", {"username": "kaya",
                                               "password": "moonhunter"})
@@ -171,7 +171,7 @@ class GalleryTestCase(TestCase):
                                       "blurb": "my favorite doggies :-)",
                                       "type": "photoset",
                                       "theme": "furry",
-                                      "public": True})
+                                      "publicity": "PUB"})
         # My gallery:
         results = c.get("/kaya/doggies")
         self.assertEqual(results.status_code, 200)
@@ -181,3 +181,33 @@ class GalleryTestCase(TestCase):
         results = c.get("/kruger/lightning")
         self.assertEqual(results.status_code, 200)
         self.assertNotIn('a href="/kruger/lightning/edit"', results.content)
+
+
+    def testPrivateGallery(self):
+        # If gallery is set to private, i should be able to see it, but nobody else.
+        c = Client()
+        self.createBasicUser()
+        results = c.post("/accounts/create", {"username": "kaya",
+                                             "email": "kaya@circle.org",
+                                             "password": "moonhunter",
+                                             "confirm_password": "moonhunter"})
+        
+        results = c.post("/accounts/login/", {"username": "kruger",
+                                              "password": "stormlord"})
+        results = c.post("/kruger/newgallery", {"title": "plans",
+                                      "blurb": "for destroying civilization",
+                                      "publicity": "PRI"})
+
+        # I should be able to see the gallery (with a note that it's private)
+        results = c.get("/kruger/plans")
+        self.assertEqual(results.status_code, 200)
+        self.assertIn("Private Collection", results.content)
+
+        # but kaya shouldn't, she should be redirected:
+        results = c.post("/accounts/login/", {"username": "kaya",
+                                              "password": "moonhunter"})
+        results = c.get("/kruger/plans")
+        self.assertEqual(results.status_code, 302)
+        self.assertTrue(results.url.endswith, "/kruger")
+
+        # TODO now krueger makes it public, kaya tries again, can view:

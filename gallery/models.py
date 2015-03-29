@@ -1,9 +1,9 @@
 from django.db import models
 from django.contrib.auth.models import User
 
-PRIVACY_SETTINGS = {"private": 0,
-                    "friends-only": 1,
-                    "public": 2}  # Probably more settings here in future.
+PRIVACY_SETTINGS = [("PRI", "Private"),
+                    ("FRO", "Friends-Only"),
+                    ("PUB", "Public")]  # Probably more settings here in future.
 
 class Human(models.Model):
     account = models.ForeignKey(User, null=False)
@@ -21,6 +21,9 @@ class Gallery(models.Model):
     blurb = models.TextField()
     type = models.TextField()
     theme = models.TextField()
+    publicity = models.CharField(max_length=3,
+                                choices=PRIVACY_SETTINGS,
+                                default="PRI")
     # a unique-together constraint of author + title?
     
 class Work(models.Model):
@@ -33,7 +36,9 @@ class Work(models.Model):
     workType = models.TextField()
     publishDate = models.DateTimeField()
     modifyDate = models.DateTimeField()
-    publicity = models.IntegerField()
+    publicity = models.CharField(max_length=3,
+                                choices=PRIVACY_SETTINGS,
+                                default="PRI")
 
 # This can hold both pictures and blog posts, so it's pretty flexible...
 # TBD how do we represent, like, an "app", like Moonserpent or Pencilbox or whatever?
