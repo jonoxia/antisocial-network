@@ -25,6 +25,7 @@ class Gallery(models.Model):
                                 choices=PRIVACY_SETTINGS,
                                 default="PRI")
     # a unique-together constraint of author + title?
+
     
 class Work(models.Model):
     gallery = models.ForeignKey(Gallery, null=False)
@@ -65,3 +66,13 @@ class PublicitySetting(models.Model):
     person = models.ForeignKey(Human, null=False)
     conversation = models.ForeignKey(Conversation, null=False)
     setting = models.IntegerField() # 
+
+class GalleryCollab(models.Model):
+    # For sharing ownership of a gallery, attach a few of these
+    person = models.ForeignKey(Human, null=False)
+    gallery = models.ForeignKey(Gallery, null=False)
+    permissions = models.IntegerField() # what values could this have?
+    publicity = models.CharField(max_length=3,
+                                choices=PRIVACY_SETTINGS,
+                                default="PRI")
+    
