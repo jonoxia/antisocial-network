@@ -1,0 +1,4 @@
+Django==1.7.7
+Markdown==2.6.1
+South==1.0.2
+wsgiref==0.1.2

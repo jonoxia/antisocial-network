@@ -4,6 +4,8 @@ from django.shortcuts import render_to_response
 from django.shortcuts import redirect
 from django.template import RequestContext
 
+import markdown
+
 from gallery.models import PRIVACY_SETTINGS
 from gallery.models import Human, Gallery, Work
 from gallery.forms import EditProfileForm
@@ -23,6 +25,7 @@ def person_page(request, personName):
         data["editable"] = True
     else:
         data["editable"] = False
+    data["bio"] = markdown.markdown(person.bio)
 
     return render_to_response('gallery/personpage.html', data,
                     context_instance=RequestContext(request))
