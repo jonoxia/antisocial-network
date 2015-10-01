@@ -1,6 +1,14 @@
 {% extends "common/base.html" %}
 {% block content %}
 
-Editing gallery {{ gallery }} for person {{ person }}.
+<p>Editing gallery {{ gallery }} for person {{ person.publicName }}.</p>
+
+<p>{{ errorMsg }}</p>
+
+<form method="POST" action="">
+{% csrf_token %}
+{{ form.as_p }}
+<input type="submit" value="Save"/>
+</form>
 
 {% endblock %}

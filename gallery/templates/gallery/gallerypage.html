@@ -2,7 +2,7 @@
 {% block content %}
 
 <h2>Gallery {{ gallery.title }}</h2>
-<p>By {{ person.publicName }}.</p>
+<p>By <a href="/{{ person.publicName }}">{{person.publicName}}</a>.</p>
 {% if gallery.publicity == 'PRI' %}
     <p>Private Collection</p>
 {% elif gallery.publicity == 'FRO' %}
@@ -11,7 +11,9 @@
     <p>Public Collection</p>
 {% endif %}
 
-<p>{{ gallery.blurb }}</p>
+{% autoescape off %}
+{{ blurb }}
+{% endautoescape %}
 
 {% if editable %}
   <a href="/{{person.publicName}}/{{gallery.title}}/edit">Edit Gallery</a>

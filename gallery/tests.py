@@ -195,8 +195,8 @@ class GalleryTestCase(TestCase):
         results = c.post("/accounts/login/", {"username": "kruger",
                                               "password": "stormlord"})
         results = c.post("/kruger/newgallery", {"title": "plans",
-                                      "blurb": "for destroying civilization",
-                                      "publicity": "PRI"})
+                                        "blurb": "for destroying civilization",
+                                        "publicity": "PRI"})
 
         # I should be able to see the gallery (with a note that it's private)
         results = c.get("/kruger/plans")
@@ -210,4 +210,76 @@ class GalleryTestCase(TestCase):
         self.assertEqual(results.status_code, 302)
         self.assertTrue(results.url.endswith, "/kruger")
 
-        # TODO now krueger makes it public, kaya tries again, can view:
+
+    def testChangeGalleryPublicity(self):
+
+        c = Client()
+        self.createBasicUser()
+        results = c.post("/accounts/create", {"username": "kaya",
+                                             "email": "kaya@circle.org",
+                                             "password": "moonhunter",
+                                             "confirm_password": "moonhunter"})
+
+        # Krueger makes private gallery:        
+        results = c.post("/accounts/login/", {"username": "kruger",
+                                              "password": "stormlord"})
+        results = c.post("/kruger/newgallery", {"title": "plans",
+                                        "blurb": "for destroying civilization",
+                                        "publicity": "PRI"})
+
+        # Kaya tries to view it, can't:
+        results = c.post("/accounts/login/", {"username": "kaya",
+                                              "password": "moonhunter"})
+        results = c.get("/kruger/plans")
+        self.assertEqual(results.status_code, 302)
+        self.assertTrue(results.url.endswith, "/kruger")
+
+        # Krueger makes it public:
+        results = c.post("/accounts/login/", {"username": "kruger",
+                                              "password": "stormlord"})
+        results = c.post("/kruger/plans/edit", {"publicity": "PUB"})
+        self.assertEqual(results.status_code, 302)
+        self.assertTrue(results.url.endswith, "/kruger/plans")
+
+        # kaya tries again, can view:
+        results = c.post("/accounts/login/", {"username": "kaya",
+                                              "password": "moonhunter"})
+        results = c.get("/kruger/plans")
+        self.assertEqual(results.status_code, 200)
+        self.assertIn("for destroying civilization", results.content)
+
+
+    def testGalleryUsesMarkdown(self):
+        c = Client()
+        self.createBasicUser()
+
+        results = c.post("/accounts/login/", {"username": "kruger",
+                                              "password": "stormlord"})
+        results = c.post("/kruger/newgallery", {"title": "plans",
+                                        "blurb": "**for destroying civilization**",
+                                        "publicity": "PRI"})
+        results = c.get("/kruger/plans")
+        self.assertEqual(results.status_code, 200)
+        self.assertIn("<strong>for destroying civilization</strong>", results.content)
+
+
+    def testChangeGalleryName(self):
+        c = Client()
+        self.createBasicUser()
+
+        results = c.post("/accounts/login/", {"username": "kruger",
+                                              "password": "stormlord"})
+        results = c.post("/kruger/newgallery", {"title": "thunder",
+                                        "blurb": "favorite lightning pics",
+                                        "publicity": "PRI"})
+        # oops i meant to put lightning not thunder
+        results = c.post("/kruger/thunder/edit", {"title": "lightning"})
+
+        results = c.get("/kruger/lightning")
+        self.assertEqual(results.status_code, 200)
+        self.assertIn("favorite lightning pics", results.content)
+
+        # gallery should no longer exist under old title:
+        results = c.get("/kruger/thunder")
+        self.assertEqual(results.status_code, 200)
+        self.assertIn("No user/gallery/work by that name.", results.content)

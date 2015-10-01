@@ -44,6 +44,7 @@ def gallery_page(request, personName, galleryTitle):
                         context_instance=RequestContext(request))
     gallery = matches[0]
     data = {"person": person, "gallery": gallery}
+    data["blurb"] = markdown.markdown(gallery.blurb)
     if request.user == person.account:
         data["editable"] = True
     else:
@@ -121,10 +122,55 @@ def new_gallery(request, personName):
                     context_instance=RequestContext(request))
 
 
-def edit_gallery(request, personName, gallery):
-    data = {"person": person, "gallery": gallery}
+def edit_gallery(request, personName, galleryTitle):
+    errorMsg = ""
+    # Look up the person:
+    matches = Human.objects.filter(publicName = personName)
+    if len(matches) == 0:
+        return render_to_response('gallery/404.html', {},
+                        context_instance=RequestContext(request))
+    person = matches[0]
+
+    # Look up the gallery
+    matches = Gallery.objects.filter(title = galleryTitle)
+    if len(matches) == 0:
+        return render_to_response('gallery/404.html', {},
+                        context_instance=RequestContext(request))
+    gallery = matches[0]
+    
+    if request.user != person.account:
+        # Only I can edit my galleries:
+        return redirect("/%s/%s" % (personName, galleryTitle) )
+
+    if request.method == "POST":
+        # Don't require all fields to be present, but update any
+        # fields that are present:
+        title = request.POST.get("title", None)
+        if title is not None and title != gallery.title:
+            # See if title is already used:
+            matches = Gallery.objects.filter(author = person, title = title)
+            if len(matches) > 0:
+                errorMsg = "You already have a gallery called %s" % title
+            else:
+                gallery.title = title
+        blurb = request.POST.get("blurb", None)
+        if blurb is not None:
+            gallery.blurb = blurb
+        publicity = request.POST.get("publicity", None)
+        if publicity is not None:
+            gallery.publicity = publicity
+        gallery.save()
+        if errorMsg == "":
+            return redirect("/%s/%s" % (personName, gallery.title) )
+
+    form = EditGalleryForm(initial = {"title": gallery.title,
+                                      "blurb": gallery.blurb,
+                                      "publicity": gallery.publicity})
+
+    data = {"person": person, "form": form, "errorMsg": errorMsg}
     return render_to_response('gallery/editgallery.html', data,
                     context_instance=RequestContext(request))
+
 
 def new_work(request, person, gallery):
     data = {"person": person, "gallery": gallery}
