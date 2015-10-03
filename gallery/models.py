@@ -5,6 +5,10 @@ PRIVACY_SETTINGS = [("PRI", "Private"),
                     ("FRO", "Friends-Only"),
                     ("PUB", "Public")]  # Probably more settings here in future.
 
+WORK_TYPES = [("WRI", "Writing"),
+              ("PIC", "Picture"),
+              ("AUD", "Audio")] # More in the future
+
 class Human(models.Model):
     account = models.ForeignKey(User, null=False)
     pictureUrl = models.TextField()
@@ -31,16 +35,16 @@ class Work(models.Model):
     gallery = models.ForeignKey(Gallery, null=False)
     thumbnailUrl = models.TextField()
     imageUrl = models.TextField()
-    sequence_num = models.IntegerField()
-    title = models.TextField()
+    sequenceNum = models.IntegerField() # optional, used if gallery is ordered
+    title = models.TextField() # optional, i.e. picture posts don't have it
     body = models.TextField()
-    workType = models.TextField()
-    publishDate = models.DateTimeField()
+    workType = models.TextField() # 
+    publishDate = models.DateTimeField(null=True, default=None)
     modifyDate = models.DateTimeField()
     publicity = models.CharField(max_length=3,
-                                choices=PRIVACY_SETTINGS,
-                                default="PRI")
-
+                                 choices=PRIVACY_SETTINGS,
+                                 default="PRI")
+# TODO should this have an author or do we just assume it's the gallery author?
 # This can hold both pictures and blog posts, so it's pretty flexible...
 # TBD how do we represent, like, an "app", like Moonserpent or Pencilbox or whatever?
 # it's like a static page with a ton of javascript files... goes in a gallery by itself

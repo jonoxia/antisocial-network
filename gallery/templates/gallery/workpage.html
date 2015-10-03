@@ -1,6 +1,29 @@
 {% extends "common/base.html" %}
 {% block content %}
 
-Work page for person {{ person }} gallery {{ gallery }} work {{ work }}.
+<h2>{{ work.title }}</h2>
+
+{% if mine %}
+<a href="/{{person.publicName}}/{{gallery.title}}/{{work.title}}/edit">Edit</a>
+{% endif %}
+
+<p>By <a href="/{{person.publicName}}">{{ person.publicName }}</a>.
+Last modified {{ work.modifyDate }}. Part of the gallery <a href="/{{person.publicName}}/{{gallery.title}}">{{gallery.title}}</a>.</p>
+
+<div id="work-body">
+{% autoescape off %}
+{{ body }}
+{% endautoescape %}
+</div>
+
+{% if previousWork %}
+<a href="/{{person.publicName}}/{{gallery.title}}/{{previousWork.title}}">Previous: {{ previousWork.title }}</a>
+<!-- easier to implement if we had a URL for getting a work by sequence num -->
+{% endif %}
+
+{% if nextWork %}
+<a href="/{{person.publicName}}/{{gallery.title}}/{{nextWork.title}}">Next: {{ nextWork.title }}</a>
+<!-- easier to implement if we had a URL for getting a work by sequence num -->
+{% endif %}
 
 {% endblock %}

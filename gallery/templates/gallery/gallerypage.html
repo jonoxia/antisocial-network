@@ -11,12 +11,26 @@
     <p>Public Collection</p>
 {% endif %}
 
+<h2>{{ gallery.title }}</h2>
+
 {% autoescape off %}
 {{ blurb }}
 {% endautoescape %}
 
+<p>By <a href="/{{person.publicName}}">{{ person.publicName }}</a>.</p>
+
+<div id="works-list">
+  <ul>
+    {% for work in works %}
+    <li>
+      <a href="/{{person.publicName}}/{{gallery.title}}/{{work.title}}">{{work.title}}</a>
+    </li>
+    {% endfor %}
+    </ul>
+</div>
+
 {% if editable %}
+  <a href="/{{person.publicName}}/{{gallery.title}}/new">New Work</a>
   <a href="/{{person.publicName}}/{{gallery.title}}/edit">Edit Gallery</a>
-<!-- future: link to add new work to gallery -->
 {% endif %}
 {% endblock %}

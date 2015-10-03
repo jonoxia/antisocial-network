@@ -1,6 +1,6 @@
 from django.test import TestCase
 from django.test import Client
-from gallery.models import Human
+from gallery.models import Human, Work
 
 class GalleryTestCase(TestCase):
     def setUp(self):
@@ -176,11 +176,15 @@ class GalleryTestCase(TestCase):
         results = c.get("/kaya/doggies")
         self.assertEqual(results.status_code, 200)
         self.assertIn('a href="/kaya/doggies/edit"', results.content)
-        
+
+        # Test my gallery page also has a New Work link
+        self.assertIn('a href="/kaya/doggies/new"', results.content)
+
         # Should not see the link on other peopls' pages:
         results = c.get("/kruger/lightning")
         self.assertEqual(results.status_code, 200)
         self.assertNotIn('a href="/kruger/lightning/edit"', results.content)
+        self.assertNotIn('a href="/kruger/lightning/new"', results.content)
 
 
     def testPrivateGallery(self):
@@ -283,3 +287,147 @@ class GalleryTestCase(TestCase):
         results = c.get("/kruger/thunder")
         self.assertEqual(results.status_code, 200)
         self.assertIn("No user/gallery/work by that name.", results.content)
+
+
+    def testAddWorkToGallery(self):
+        c = Client()
+        self.createBasicUser()
+        results = c.post("/accounts/login/", {"username": "kruger",
+                                              "password": "stormlord"})
+        results = c.post("/kruger/newgallery", {"title": "plans",
+                                        "blurb": "**for destroying civilization**",
+                                        "publicity": "PRI"})
+        # work type is a text field so we can put whatever we want there
+        # let's do a text post for now, uploading images comes later
+        results = c.post("/kruger/plans/new", {"workType": "WRI",
+                                               "title": "Menoth",
+                                               "body": "First we electrocute all the choir",
+                                               "publicity": "PRI"})
+        # work object should have been created:
+        matches = Work.objects.filter(gallery__title = "plans")
+        self.assertEqual(matches.count(), 1)
+        self.assertEqual(matches[0].title, "Menoth")
+        self.assertEqual(matches[0].body, "First we electrocute all the choir")
+        self.assertEqual(matches[0].sequenceNum, 1)
+
+        self.assertEqual(results.status_code, 302)
+        # We should be redirected to the page /kruger/plans/Menoth
+        self.assertTrue(results.url.endswith, "/kruger/plans/Menoth")
+        # Test that /kruger/plans/Menoth renders a page with the right title/body
+        results = c.get("/kruger/plans/Menoth")
+        self.assertEqual(results.status_code, 200)
+        self.assertIn("<h2>Menoth</h2>", results.content)
+        self.assertIn("First we electrocute all the choir", results.content)
+        
+        # TODO test i can't make two works same title in same gallery
+        #     (but i can make multiple with no title? how's that work?)
+        #     (right... if picture posts can be made without titles, how do we
+        #      access them?  by sequence num i guess?)
+        # TODO test that i can't create a work with same name as a functional url
+        # TODO test that i can't create a work in someone else's gallery
+        
+        # Test that if we add several works, their sequence nums are sequential:
+        results = c.post("/kruger/plans/new", {"workType": "WRI",
+                                               "title": "Khador",
+                                               "body": "Get those warjacks with my warpwolves!",
+                                                "publicity": "PRI"})
+        matches = Work.objects.filter(gallery__title = "plans")
+        self.assertEqual(matches.count(), 2)
+        matches = Work.objects.filter(title = "Khador", gallery__title = "plans")
+        self.assertEqual(matches.count(), 1)
+        self.assertEqual(matches[0].title, "Khador")
+        self.assertEqual(matches[0].body, "Get those warjacks with my warpwolves!")
+        self.assertEqual(matches[0].sequenceNum, 2)
+
+
+
+    def testWorkPage(self):
+        c = Client()
+        self.createBasicUser()
+        results = c.post("/accounts/login/", {"username": "kruger",
+                                              "password": "stormlord"})
+        results = c.post("/kruger/newgallery", {"title": "plans",
+                                        "blurb": "**for destroying civilization**",
+                                        "publicity": "PRI"})
+        results = c.post("/kruger/plans/new", {"workType": "WRI",
+                                               "title": "Menoth",
+                                               "body": "First we electrocute all the **choir**",
+                                                "publicity": "PRI"})
+
+        results = c.get("/kruger/plans/Menoth")
+        self.assertEqual(results.status_code, 200)
+        self.assertIn("<h2>Menoth</h2>", results.content)
+        self.assertIn("First we electrocute all the <strong>choir</strong>",
+                        results.content) # markdown shoulda converted ** to <strong>
+
+        # test that page includes edit link, if i'm kruger
+        self.assertIn('<a href="/kruger/plans/Menoth/edit">', results.content)
+
+        # test that the work page links back to the person and gallery pages
+        self.assertIn('<a href="/kruger">', results.content)
+        self.assertIn('<a href="/kruger/plans">', results.content)
+
+        # Test that link to new work shows up on the /kruger/plans gallery page
+        results = c.get("/kruger/plans")
+        self.assertEqual(results.status_code, 200)
+        self.assertIn('<a href="/kruger/plans/Menoth">Menoth', results.content)
+
+        # There should not be a Next link because this is only work in gallery so far
+        self.assertNotIn('Next: ', results.content)
+        # Make a second post in gallery:
+        results = c.post("/kruger/plans/new", {"workType": "WRI",
+                                               "title": "Khador",
+                                               "body": "Get those warjacks with my warpwolves!",
+                                                "publicity": "PRI"})
+        # first work's page should have a next link to the second:
+        results = c.get("/kruger/plans/Menoth")
+        self.assertEqual(results.status_code, 200)
+        self.assertIn('<a href="/kruger/plans/Khador">Next', results.content)
+
+        # second work's page should have a previous link to the first:
+        results = c.get("/kruger/plans/Khador")
+        self.assertEqual(results.status_code, 200)
+        self.assertIn('<a href="/kruger/plans/Menoth">Previous', results.content)
+
+        # TODO test that default state of work is private until I publish it
+
+
+    def testEditWork(self):
+        # TODO
+
+        # support re-titling the page -- with a check that you're not duplicating
+        # a name in the same gallery
+        pass
+        
+
+
+                # What do we post when adding a new work to a gallery?
+        # is it ready for publication or is it a draft?
+        # can I upload arbitrary files? like a PDF or word document?
+        # need to know what gallery it's part of (URL tells us this)
+        # What is the type?
+        #  type 1: simple picture with optional caption
+        #            (can i replace the picture while editing? or not?)
+        #  type 2: blog post: a lot of text in markdown, with optional pictures
+        #            interspersed
+        #  (note type 2 is a superset of type 1 -- they could be stored the same
+        #    way but the UI for creating and viewing them might be different)
+        #  type 3: audio file:
+        #  type 4: quick link: an external URL with a caption or content
+        #  type 5: interactive (i.e. custom javascript files e.g. a game)
+
+        # future features:  Move a work to another gallery
+        #   share a work between multiple galleries?
+        #       i.e. this goes in my "all my writings" gallery as well as my
+        #       "all my complaints about computers" gallery
+        #   share a work between multiple humans?
+        #   edit a work
+        #   publish a work (public or friends-only)
+        #   see all my drafts
+        #   choose gallery style
+        #   choose gallery display order (chronological vs. alphabetical by title vs.
+        #    custom order vs. something else?)
+
+
+        # MINIMAL FEATURES for me to start using this website as a website:
+        # new work, edit work, style the gallery page, style the work page

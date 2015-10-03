@@ -11,3 +11,8 @@ urlpatterns = patterns('',
     url(r'^(\w+)/(\w+)/(\w+)$', views.work_page),
     url(r'^(\w+)/(\w+)/(\w+)/edit$', views.edit_work),
 )
+
+# Don't allow the user to give a name to a work or gallery that conflicts with
+# functional URLs, i.e. i can't make a gallery named newgallery.
+# Maybe have all the functional galleries start with underscores and don't let
+# users create anything that starts with underscore.

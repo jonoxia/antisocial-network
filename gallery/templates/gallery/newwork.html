@@ -1,6 +1,16 @@
 {% extends "common/base.html" %}
 {% block content %}
 
-Creating a new work in gallery {{ gallery }} for person {{ person }}.
+<h2>New Work</h2>
+
+{{ errorMsg }}
+
+<p>{{ person }} is creating a new work in gallery {{ gallery }}.</p>
+
+<form method="POST" action="">
+{% csrf_token %}
+{{ form.as_p }}
+<input type="submit" value="Save"/>
+</form>
 
 {% endblock %}

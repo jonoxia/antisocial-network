@@ -5,11 +5,12 @@ from django.shortcuts import redirect
 from django.template import RequestContext
 
 import markdown
+import datetime
 
 from gallery.models import PRIVACY_SETTINGS
 from gallery.models import Human, Gallery, Work
 from gallery.forms import EditProfileForm
-from gallery.forms import EditGalleryForm
+from gallery.forms import EditGalleryForm, NewWorkForm, EditWorkForm
 
 
 def person_page(request, personName):
@@ -52,13 +53,53 @@ def gallery_page(request, personName, galleryTitle):
         # if i'm not the creator, then if it's private, i can't see it
         if gallery.publicity == "PRI":
             return redirect("/%s" % (personName) )
+
+    works = Work.objects.filter(gallery = gallery)
+    data["works"] = works
         
     return render_to_response('gallery/gallerypage.html', data,
                     context_instance=RequestContext(request))
 
 
-def work_page(request, person, gallery, work):
-    data = {"person": person, "gallery": gallery, "work": work}
+def work_page(request, personName, galleryTitle, workTitle):
+    matches = Work.objects.filter(title = workTitle,
+                                  gallery__title = galleryTitle,
+                                  gallery__author__publicName = personName)
+    if len(matches) == 0:
+        return render_to_response('gallery/404.html', {},
+                                context_instance=RequestContext(request))
+    work = matches[0]
+
+    matches = Human.objects.filter(publicName = personName)
+    person = matches[0]
+    mine = (request.user == person.account)
+
+    body = markdown.markdown(work.body) # parse markdown for display
+
+    # Get the previous and next works, if any, so that we can put the links
+    # at the bottom of the page. Ultimately different galleries will have different
+    # ordering schemes. We can either redo all the sequence numbers when we change
+    # a gallery's ordering scheme, or we can have a "what to order by" field in the
+    # gallery and query that here before doing the ordering.
+
+    # If we're ordering by something other than sequence number, we have to retreive
+    # all works in the gallery and order them by whatever in order to decide what
+    # the "previous" and "next" are.
+    siblings = Work.objects.filter(gallery = work.gallery).order_by("sequenceNum")
+    siblings = [s for s in siblings]
+    myIndex = siblings.index(work)
+    if myIndex > 0:
+        previousWork = siblings[myIndex - 1]
+    else:
+        previousWork = None
+    if myIndex < len(siblings) - 1:
+        nextWork = siblings[myIndex + 1]
+    else:
+        nextWork = None
+        
+    data = {"person": person, "gallery": work.gallery, "work": work,
+            "mine": mine, "body": body, "previousWork": previousWork,
+            "nextWork": nextWork}
     return render_to_response('gallery/workpage.html', data,
                     context_instance=RequestContext(request))
 
@@ -172,10 +213,62 @@ def edit_gallery(request, personName, galleryTitle):
                     context_instance=RequestContext(request))
 
 
-def new_work(request, person, gallery):
-    data = {"person": person, "gallery": gallery}
-    return render_to_response('gallery/newwork.html', data,
-                    context_instance=RequestContext(request))
+def new_work(request, personName, galleryTitle):
+    matches = Human.objects.filter(publicName = personName)
+    if len(matches) == 0:
+        return render_to_response('gallery/404.html', {},
+            context_instance=RequestContext(request))
+    person = matches[0]
+
+    if request.user != person.account:
+        # Only I can edit my galleries:
+        return redirect("/%s/%s" % (personName, galleryTitle) )
+    
+    # TODO use get_object_or_404?
+    matches = Gallery.objects.filter(title = galleryTitle)
+    if len(matches) == 0:
+        return render_to_response('gallery/404.html', {},
+                                context_instance=RequestContext(request))
+    gallery = matches[0]
+
+    if request.method == "POST":
+        # process new work submission here
+
+        form = NewWorkForm(request.POST)
+        if form.is_valid():
+            title = form.cleaned_data["title"]
+            workType = form.cleaned_data["workType"]
+            body = form.cleaned_data["body"]
+            publicity = form.cleaned_data["publicity"]
+
+            # TODO if title field is blank (which it could be for picture posts),
+            # give it an auto-generated title.
+
+            # Get the highest sequence num of works already in the gallery:
+            existing_works = Work.objects.filter(gallery = gallery)
+            if existing_works.count() > 0:
+                maxNum = max([w.sequenceNum for w in existing_works])
+                # could also use an order-by
+            else:
+                maxNum = 0
+            Work.objects.create(gallery = gallery,
+                                title = title,
+                                workType = workType,
+                                body = body,
+                                modifyDate = datetime.datetime.now(),
+                                thumbnailUrl = "",
+                                imageUrl = "",
+                                sequenceNum = maxNum + 1)
+            # Redirect to the work page for the new work:
+            return redirect("/%s/%s/%s" % (personName, galleryTitle, title) )
+        else:
+            raise Exception("Invalid form %s" % str (form.errors))
+    else:
+        form = NewWorkForm()
+
+        data = {"person": person, "gallery": gallery, "errorMsg": "", "form": form}
+        return render_to_response('gallery/newwork.html', data,
+                        context_instance=RequestContext(request))
 
 
 def edit_work(request, person, gallery, work):
