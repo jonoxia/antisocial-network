@@ -271,7 +271,54 @@ def new_work(request, personName, galleryTitle):
                         context_instance=RequestContext(request))
 
 
-def edit_work(request, person, gallery, work):
-    data = {"person": person, "gallery": gallery, "work": work}
-    return render_to_response('gallery/editwork.html', data,
-                    context_instance=RequestContext(request))
+def edit_work(request, personName, galleryTitle, workTitle):
+    errorMsg = ""
+    
+    # Look up the person:
+    matches = Human.objects.filter(publicName = personName)
+    if len(matches) == 0:
+        return render_to_response('gallery/404.html', {},
+                        context_instance=RequestContext(request))
+    person = matches[0]
+
+    # Look up the gallery
+    matches = Gallery.objects.filter(title = galleryTitle)
+    if len(matches) == 0:
+        return render_to_response('gallery/404.html', {},
+                        context_instance=RequestContext(request))
+    gallery = matches[0]
+    
+    if request.user != person.account:
+        # Only I can edit my works:
+        return redirect("/%s/%s" % (personName, galleryTitle) )
+
+    work = Work.objects.get(gallery = gallery, title = workTitle)
+    
+    if request.method == "POST":
+        form = EditWorkForm(request.POST)
+        if form.is_valid():
+            title = form.cleaned_data["title"]
+            body = form.cleaned_data["body"]
+            publicity = form.cleaned_data["publicity"]
+
+            # TODO does changing a work's title change its URL as well?
+            # TODO what if you try to set the title to blank?
+
+            work.title = title
+            work.body = body
+            work.publicity = publicity
+            work.save()
+
+            # Redirect to the work page for the edited work:
+            return redirect("/%s/%s/%s" % (personName, galleryTitle, title) )
+        else:
+            raise Exception("Invalid form %s" % str (form.errors))
+        
+    else:
+        form = EditWorkForm(initial = {"title": work.title,
+                                       "body": work.body,
+                                       "publicity": work.publicity})
+        data = {"person": person, "gallery": gallery, "work": work, "form": form,
+                "errorMsg": ""}
+        return render_to_response('gallery/editwork.html', data,
+                        context_instance=RequestContext(request))

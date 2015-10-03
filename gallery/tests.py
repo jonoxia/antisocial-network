@@ -393,13 +393,54 @@ class GalleryTestCase(TestCase):
 
 
     def testEditWork(self):
-        # TODO
+        # First make a work:
+        c = Client()
+        self.createBasicUser()
+        results = c.post("/accounts/login/", {"username": "kruger",
+                                              "password": "stormlord"})
+        results = c.post("/kruger/newgallery", {"title": "plans",
+                                        "blurb": "**for destroying civilization**",
+                                        "publicity": "PRI"})
+        results = c.post("/kruger/plans/new", {"workType": "WRI",
+                                               "title": "Menoth",
+                                               "body": "First we electrocute all the **choir**",
+                                               "publicity": "PRI"})
 
-        # support re-titling the page -- with a check that you're not duplicating
-        # a name in the same gallery
-        pass
+        # Look at the edit page for it. Markdown should be displayed (literally)
+        # inside a text field:
+        results = c.get("/kruger/plans/Menoth/edit")
+        self.assertEqual(results.status_code, 200)
+        self.assertIn("First we electrocute all the **choir**", results.content)
         
+        # Test changing publicity:
+        matches = Work.objects.filter(gallery__title = "plans")
+        self.assertEqual(matches.count(), 1)
+        self.assertEqual(matches[0].publicity, "PRI")
+        results = c.post("/kruger/plans/Menoth/edit", {"title": "Menoth",
+                                                        "body": "First we electrocute all the **choir**",
+                                                        "publicity": "PUB"})
+        self.assertEqual(results.status_code, 302)
+        self.assertTrue(results.url.endswith, "/kruger/plans/Menoth")
+        matches = Work.objects.filter(gallery__title = "plans")
+        self.assertEqual(matches.count(), 1)
+        self.assertEqual(matches[0].publicity, "PUB")
 
+        
+        # Test changing body text
+        results = c.post("/kruger/plans/Menoth/edit", {"title": "Menoth",
+                                                        "body": "First we electrocute all the **zealots**",
+                                                        "publicity": "PUB"})
+        self.assertEqual(results.status_code, 302)
+        self.assertTrue(results.url.endswith, "/kruger/plans/Menoth")
+        matches = Work.objects.filter(gallery__title = "plans")
+        self.assertEqual(matches.count(), 1)
+        self.assertEqual(matches[0].body, "First we electrocute all the **zealots**")
+
+
+        # TODO test changing title (with a check that you're not duplicating
+        # a name in the same gallery)
+        
+        
 
                 # What do we post when adding a new work to a gallery?
         # is it ready for publication or is it a draft?
