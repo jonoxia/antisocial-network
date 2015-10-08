@@ -340,6 +340,10 @@ class GalleryTestCase(TestCase):
         self.assertEqual(matches[0].sequenceNum, 2)
 
 
+    # TODO I think that works and galleries should have a urlname which is different
+    # from their title. Title could be blank or have non-printable characters, but we
+    # still need a way to refer to them in urls.
+
 
     def testWorkPage(self):
         c = Client()

@@ -1,16 +1,34 @@
 {% extends "common/base.html" %}
+
+{% block extrajs %}
+<script src="/static/gallery/js/edit_work.js"></script>
+{% endblock %}
+
+{% block header %}
+  <h2>New Work</h2>
+
+    {{ errorMsg }}
+ 
+  <p>{{ person.publicName }} is creating a new work in gallery {{ gallery.title }}.</p>
+{% endblock %}
+
 {% block content %}
+<div id="column-container">
+  <div id="left-col" class="two-column">
+    <form method="POST" action="">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <input type="submit" value="Save"/>
+    </form>
+  </div>
 
-<h2>New Work</h2>
-
-{{ errorMsg }}
-
-<p>{{ person }} is creating a new work in gallery {{ gallery }}.</p>
-
-<form method="POST" action="">
-{% csrf_token %}
-{{ form.as_p }}
-<input type="submit" value="Save"/>
-</form>
+  <div id="right-col"class="two-column">
+    <h3>Preview</h3>
+    <div id="preview-box" style="border-style: solid; border-color:
+      black;">
+      &nbsp;&nbsp;
+    </div>
+  </div>
+</div>
 
 {% endblock %}

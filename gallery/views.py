@@ -1,5 +1,6 @@
 from django.shortcuts import render
 from django.http import HttpResponse
+from django.http import JsonResponse
 from django.shortcuts import render_to_response
 from django.shortcuts import redirect
 from django.template import RequestContext
@@ -322,3 +323,12 @@ def edit_work(request, personName, galleryTitle, workTitle):
                 "errorMsg": ""}
         return render_to_response('gallery/editwork.html', data,
                         context_instance=RequestContext(request))
+
+
+def preview_work(request):
+    # post markdown here to get back html preview of markdown...
+    if request.method == "POST":
+        body = request.POST.get("body", None)
+        html = markdown.markdown(body) # parse markdown for display
+        return JsonResponse({"html": html})
+    

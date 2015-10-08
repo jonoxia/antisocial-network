@@ -2,6 +2,7 @@ from django.conf.urls import patterns, include, url
 import views
 
 urlpatterns = patterns('',
+    url(r'^preview$', views.preview_work),
     url(r'^(\w+)$', views.person_page),
     url(r'^(\w+)/edit$', views.edit_my_profile),
     url(r'^(\w+)/newgallery$', views.new_gallery),

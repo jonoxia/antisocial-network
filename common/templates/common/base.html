@@ -2,9 +2,25 @@
 <html>
 <head>
 <title>The Antisocial Network</title>
+
+<script src="/static/common/js/jquery-1.11.1.js"></script>
+<script src="/static/common/js/apputils.js"></script>
+{% block extrajs %}
+{% endblock %}
+
+<link href="/static/common/css/stylez.css" rel='stylesheet' type='text/css'>
+{% block extracss %}
+{% endblock %}
 </head>
 
 <body>
+  <div class="center-container">
+    <div id="header" class="centered">
+      {% block header %}
+      {% endblock %}
+    </div>
+  </div>
+
 {% block content %}
 {% endblock %}
 </body>
