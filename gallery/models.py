@@ -21,6 +21,7 @@ class Human(models.Model):
     
 class Gallery(models.Model):
     author = models.ForeignKey(Human, null=False)
+    urlname = models.TextField(null=False) # used when referring to gallery in part of url
     title = models.TextField()
     blurb = models.TextField()
     type = models.TextField()
@@ -33,6 +34,7 @@ class Gallery(models.Model):
     
 class Work(models.Model):
     gallery = models.ForeignKey(Gallery, null=False)
+    urlname = models.TextField(null=False) # used when referring to work in part of url
     thumbnailUrl = models.TextField()
     imageUrl = models.TextField()
     sequenceNum = models.IntegerField() # optional, used if gallery is ordered

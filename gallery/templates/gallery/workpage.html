@@ -4,11 +4,11 @@
 <h2>{{ work.title }}</h2>
 
 {% if mine %}
-<a href="/{{person.publicName}}/{{gallery.title}}/{{work.title}}/edit">Edit</a>
+<a href="/{{person.publicName}}/{{gallery.urlname}}/{{work.urlname}}/edit">Edit</a>
 {% endif %}
 
 <p>By <a href="/{{person.publicName}}">{{ person.publicName }}</a>.
-Last modified {{ work.modifyDate }}. Part of the gallery <a href="/{{person.publicName}}/{{gallery.title}}">{{gallery.title}}</a>.</p>
+Last modified {{ work.modifyDate }}. Part of the gallery <a href="/{{person.publicName}}/{{gallery.urlname}}">{{gallery.title}}</a>.</p>
 
 <div id="work-body">
 {% autoescape off %}
@@ -17,12 +17,12 @@ Last modified {{ work.modifyDate }}. Part of the gallery <a href="/{{person.publ
 </div>
 
 {% if previousWork %}
-<a href="/{{person.publicName}}/{{gallery.title}}/{{previousWork.title}}">Previous: {{ previousWork.title }}</a>
+<a href="/{{person.publicName}}/{{gallery.urlname}}/{{previousWork.urlname}}">Previous: {{ previousWork.title }}</a>
 <!-- easier to implement if we had a URL for getting a work by sequence num -->
 {% endif %}
 
 {% if nextWork %}
-<a href="/{{person.publicName}}/{{gallery.title}}/{{nextWork.title}}">Next: {{ nextWork.title }}</a>
+<a href="/{{person.publicName}}/{{gallery.urlname}}/{{nextWork.urlname}}">Next: {{ nextWork.title }}</a>
 <!-- easier to implement if we had a URL for getting a work by sequence num -->
 {% endif %}
 

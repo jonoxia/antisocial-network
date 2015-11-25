@@ -312,18 +312,13 @@ class GalleryTestCase(TestCase):
 
         self.assertEqual(results.status_code, 302)
         # We should be redirected to the page /kruger/plans/Menoth
-        self.assertTrue(results.url.endswith, "/kruger/plans/Menoth")
+        self.assertTrue(results.url.endswith, "/kruger/plans/menoth")
         # Test that /kruger/plans/Menoth renders a page with the right title/body
-        results = c.get("/kruger/plans/Menoth")
+        results = c.get("/kruger/plans/menoth")
         self.assertEqual(results.status_code, 200)
         self.assertIn("<h2>Menoth</h2>", results.content)
         self.assertIn("First we electrocute all the choir", results.content)
         
-        # TODO test i can't make two works same title in same gallery
-        #     (but i can make multiple with no title? how's that work?)
-        #     (right... if picture posts can be made without titles, how do we
-        #      access them?  by sequence num i guess?)
-        # TODO test that i can't create a work with same name as a functional url
         # TODO test that i can't create a work in someone else's gallery
         
         # Test that if we add several works, their sequence nums are sequential:
@@ -340,11 +335,6 @@ class GalleryTestCase(TestCase):
         self.assertEqual(matches[0].sequenceNum, 2)
 
 
-    # TODO I think that works and galleries should have a urlname which is different
-    # from their title. Title could be blank or have non-printable characters, but we
-    # still need a way to refer to them in urls.
-
-
     def testWorkPage(self):
         c = Client()
         self.createBasicUser()
@@ -358,14 +348,14 @@ class GalleryTestCase(TestCase):
                                                "body": "First we electrocute all the **choir**",
                                                 "publicity": "PRI"})
 
-        results = c.get("/kruger/plans/Menoth")
+        results = c.get("/kruger/plans/menoth")
         self.assertEqual(results.status_code, 200)
         self.assertIn("<h2>Menoth</h2>", results.content)
         self.assertIn("First we electrocute all the <strong>choir</strong>",
                         results.content) # markdown shoulda converted ** to <strong>
 
         # test that page includes edit link, if i'm kruger
-        self.assertIn('<a href="/kruger/plans/Menoth/edit">', results.content)
+        self.assertIn('<a href="/kruger/plans/menoth/edit">', results.content)
 
         # test that the work page links back to the person and gallery pages
         self.assertIn('<a href="/kruger">', results.content)
@@ -374,7 +364,7 @@ class GalleryTestCase(TestCase):
         # Test that link to new work shows up on the /kruger/plans gallery page
         results = c.get("/kruger/plans")
         self.assertEqual(results.status_code, 200)
-        self.assertIn('<a href="/kruger/plans/Menoth">Menoth', results.content)
+        self.assertIn('<a href="/kruger/plans/menoth">Menoth', results.content)
 
         # There should not be a Next link because this is only work in gallery so far
         self.assertNotIn('Next: ', results.content)
@@ -384,14 +374,14 @@ class GalleryTestCase(TestCase):
                                                "body": "Get those warjacks with my warpwolves!",
                                                 "publicity": "PRI"})
         # first work's page should have a next link to the second:
-        results = c.get("/kruger/plans/Menoth")
+        results = c.get("/kruger/plans/menoth")
         self.assertEqual(results.status_code, 200)
-        self.assertIn('<a href="/kruger/plans/Khador">Next', results.content)
+        self.assertIn('<a href="/kruger/plans/khador">Next', results.content)
 
         # second work's page should have a previous link to the first:
-        results = c.get("/kruger/plans/Khador")
+        results = c.get("/kruger/plans/khador")
         self.assertEqual(results.status_code, 200)
-        self.assertIn('<a href="/kruger/plans/Menoth">Previous', results.content)
+        self.assertIn('<a href="/kruger/plans/menoth">Previous', results.content)
 
         # TODO test that default state of work is private until I publish it
 
@@ -412,7 +402,7 @@ class GalleryTestCase(TestCase):
 
         # Look at the edit page for it. Markdown should be displayed (literally)
         # inside a text field:
-        results = c.get("/kruger/plans/Menoth/edit")
+        results = c.get("/kruger/plans/menoth/edit")
         self.assertEqual(results.status_code, 200)
         self.assertIn("First we electrocute all the **choir**", results.content)
         
@@ -420,29 +410,107 @@ class GalleryTestCase(TestCase):
         matches = Work.objects.filter(gallery__title = "plans")
         self.assertEqual(matches.count(), 1)
         self.assertEqual(matches[0].publicity, "PRI")
-        results = c.post("/kruger/plans/Menoth/edit", {"title": "Menoth",
+        results = c.post("/kruger/plans/menoth/edit", {"title": "Menoth",
                                                         "body": "First we electrocute all the **choir**",
                                                         "publicity": "PUB"})
         self.assertEqual(results.status_code, 302)
-        self.assertTrue(results.url.endswith, "/kruger/plans/Menoth")
+        self.assertTrue(results.url.endswith, "/kruger/plans/menoth")
         matches = Work.objects.filter(gallery__title = "plans")
         self.assertEqual(matches.count(), 1)
         self.assertEqual(matches[0].publicity, "PUB")
 
         
         # Test changing body text
-        results = c.post("/kruger/plans/Menoth/edit", {"title": "Menoth",
+        results = c.post("/kruger/plans/menoth/edit", {"title": "Menoth",
                                                         "body": "First we electrocute all the **zealots**",
                                                         "publicity": "PUB"})
         self.assertEqual(results.status_code, 302)
-        self.assertTrue(results.url.endswith, "/kruger/plans/Menoth")
+        self.assertTrue(results.url.endswith, "/kruger/plans/menoth")
         matches = Work.objects.filter(gallery__title = "plans")
         self.assertEqual(matches.count(), 1)
         self.assertEqual(matches[0].body, "First we electrocute all the **zealots**")
 
-
         # TODO test changing title (with a check that you're not duplicating
         # a name in the same gallery)
+
+    def testMakeUrlName(self):
+        from gallery.views import make_url_name
+        self.assertEqual(make_url_name("foo1 bar2 baz3", []),
+                         "foo1-bar2-baz3") # replace spaces, preserve numbers
+        self.assertEqual(make_url_name("Alice's Restaurant", []),
+                         "alices-restaurant") # drop punctuation, lowercase
+        self.assertEqual(make_url_name("Alice's Restaurant", ["alices-restaurant"]),
+                         "alices-restaurant_1") # make all unique
+
+        self.assertEqual(make_url_name("edit", []),
+                         "edit_1") # don't use reserved word
+
+        self.assertEqual(make_url_name("edit", ["edit_1"]),
+                         "edit_2") # don't use alrady-used euphemism for reserved word
+
+        self.assertEqual(make_url_name("", [""]),
+                         "_1") # Give me numbers for blanks
+                         
+        self.assertEqual(make_url_name("", ["_1"]),
+                         "_2") # Increment the numbers
+                         
+
+        
+    def testWorksGetUniqueUrlNames(self):
+        c = Client()
+        self.createBasicUser()
+        results = c.post("/accounts/login/", {"username": "kruger",
+                                              "password": "stormlord"})
+        results = c.post("/kruger/newgallery", {"title": "plans",
+                                        "blurb": "**for destroying civilization**",
+                                        "publicity": "PRI"})
+
+        # If we try to name a title after a reserved word it should be renamed
+        results = c.post("/kruger/plans/new", {"workType": "WRI",
+                                               "title": "new",
+                                               "body": "hello",
+                                               "publicity": "PRI"})
+        # work object should have been created:
+        matches = Work.objects.filter(gallery__title = "plans")
+        self.assertEqual(matches.count(), 1)
+        self.assertEqual(matches[0].title, "new")
+        self.assertEqual(matches[0].urlname, "new_1")
+        self.assertEqual(results.status_code, 302)
+        self.assertTrue(results.url.endswith, "/kruger/plans/new_1")
+        results = c.get("/kruger/plans/new_1")
+        self.assertEqual(results.status_code, 200)
+        self.assertIn("<h2>new</h2>", results.content)
+
+        # If we try to make two works with same title in same gallery, the second
+        # one should get a suffix to make both URLs unique, but titles should not
+        # be changed.
+        results = c.post("/kruger/plans/new", {"workType": "WRI",
+                                               "title": "wolves",
+                                               "body": "hello",
+                                               "publicity": "PRI"})
+        matches = Work.objects.filter(gallery__title = "plans",
+                                      title = "wolves")
+        self.assertEqual(matches.count(), 1)
+        self.assertEqual(matches[0].urlname, "wolves")
+        self.assertEqual(results.status_code, 302)
+        self.assertTrue(results.url.endswith, "/kruger/plans/wolves")
+        results = c.get("/kruger/plans/wolves")
+        self.assertEqual(results.status_code, 200)
+        self.assertIn("<h2>wolves</h2>", results.content)
+        results = c.post("/kruger/plans/new", {"workType": "WRI",
+                                               "title": "wolves",
+                                               "body": "hello",
+                                               "publicity": "PRI"})
+        matches = Work.objects.filter(gallery__title = "plans",
+                                      title = "wolves")
+        self.assertEqual(matches.count(), 2)
+        self.assertEqual(matches[0].urlname, "wolves")
+        self.assertEqual(matches[1].urlname, "wolves_1")
+        self.assertEqual(results.status_code, 302)
+        self.assertTrue(results.url.endswith, "/kruger/plans/wolves_1")
+        results = c.get("/kruger/plans/wolves_1")
+        self.assertEqual(results.status_code, 200)
+        self.assertIn("<h2>wolves</h2>", results.content)
         
         
 

@@ -23,14 +23,14 @@
   <ul>
     {% for work in works %}
     <li>
-      <a href="/{{person.publicName}}/{{gallery.title}}/{{work.title}}">{{work.title}}</a>
+      <a href="/{{person.publicName}}/{{gallery.urlname}}/{{work.urlname}}">{{work.title}}</a>
     </li>
     {% endfor %}
     </ul>
 </div>
 
 {% if editable %}
-  <a href="/{{person.publicName}}/{{gallery.title}}/new">New Work</a>
-  <a href="/{{person.publicName}}/{{gallery.title}}/edit">Edit Gallery</a>
+  <a href="/{{person.publicName}}/{{gallery.urlname}}/new">New Work</a>
+  <a href="/{{person.publicName}}/{{gallery.urlname}}/edit">Edit Gallery</a>
 {% endif %}
 {% endblock %}
