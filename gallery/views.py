@@ -10,8 +10,8 @@ import datetime
 import re
 
 from gallery.models import PRIVACY_SETTINGS
-from gallery.models import Human, Gallery, Work
-from gallery.forms import EditProfileForm
+from gallery.models import Human, Gallery, Work, Document
+from gallery.forms import EditProfileForm, DocumentForm
 from gallery.forms import EditGalleryForm, NewWorkForm, EditWorkForm
 
 def make_url_name(title, existing_names):
@@ -37,7 +37,8 @@ def make_url_name(title, existing_names):
     urlname = "-".join(pieces)
 
     # If you match a reserved word, add a numeric suffix:
-    reserved_words = ["edit", "new", "newgallery", ""]
+    reserved_words = ["edit", "new", "newgallery", "preview", ""]
+    # TODO don't allow using these as usernames either!
     if urlname in reserved_words:
         suffix = 1
 
@@ -377,3 +378,26 @@ def preview_work(request):
         html = markdown.markdown(body) # parse markdown for display
         return JsonResponse({"html": html})
     
+
+def upload_test(request):
+    # Handle file upload
+    if request.method == 'POST':
+        form = DocumentForm(request.POST, request.FILES)
+        if form.is_valid():
+            newdoc = Document(docfile = request.FILES['docfile'])
+            newdoc.save()
+
+            # Redirect to the document list after POST
+            # return HttpResponseRedirect(reverse('myapp.views.list'))
+    else:
+        form = DocumentForm() # A empty, unbound form
+
+    # Load documents for the list page
+    documents = Document.objects.all()
+
+    # Render list page with the documents and the form
+    return render_to_response(
+        'gallery/uploadlist.html',
+        {'documents': documents, 'form': form},
+        context_instance=RequestContext(request)
+    )

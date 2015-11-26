@@ -47,10 +47,15 @@ class Work(models.Model):
                                  choices=PRIVACY_SETTINGS,
                                  default="PRI")
 # TODO should this have an author or do we just assume it's the gallery author?
+# Can we cross-include the same work in multiple galleries?
 # This can hold both pictures and blog posts, so it's pretty flexible...
 # TBD how do we represent, like, an "app", like Moonserpent or Pencilbox or whatever?
 # it's like a static page with a ton of javascript files... goes in a gallery by itself
 # hmmm.
+
+class Document(models.Model):
+    docfile = models.FileField(upload_to = 'documents/%Y/%m/%d')
+
 
 class Tag(models.Model):
     tagText = models.TextField()

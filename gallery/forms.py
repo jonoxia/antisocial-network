@@ -21,3 +21,9 @@ class NewWorkForm(forms.Form):
     body = forms.CharField(widget = forms.Textarea())
     publicity = forms.ChoiceField(choices = PRIVACY_SETTINGS, initial="PRI")
     workType = forms.ChoiceField(choices = WORK_TYPES, initial="WRI")
+
+class DocumentForm(forms.Form):
+    docfile = forms.FileField(
+        label = "Pick a file, any file",
+        help_text = "Huzzah!"
+    )
