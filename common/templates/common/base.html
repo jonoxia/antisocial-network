@@ -8,20 +8,41 @@
 {% block extrajs %}
 {% endblock %}
 
-<link href="/static/common/css/stylez.css" rel='stylesheet' type='text/css'>
+<link href="/static/common/main.css" type="text/css" rel="stylesheet"/>
+<!-- <link href="/static/common/css/stylez.css" rel='stylesheet' type='text/css'> -->
 {% block extracss %}
 {% endblock %}
 </head>
 
 <body>
-  <div class="center-container">
-    <div id="header" class="centered">
+  <div class="centered-outer">
+    <div class="centered">
       {% block header %}
       {% endblock %}
     </div>
   </div>
 
-{% block content %}
-{% endblock %}
+  <div id="content-container" class="centered-outer">
+    <div id="content" class="centered">
+      {% block content %}
+      {% endblock %}
+    </div>
+  </div>
+
+  <div id="sidebar">
+    {% block sidebar %}
+    {% endblock %}
+  </div>
+
+
+  <div id="content-container" class="centered-outer">
+    <div id="content" class="centered">
+      <br><br><br>
+      This website is<br>
+      <img src="/static/common/under_construction.gif"><br>
+      under construction.
+    </div>
+  </div>
+
 </body>
 </html>
