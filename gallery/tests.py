@@ -453,7 +453,10 @@ class GalleryTestCase(TestCase):
                          
         self.assertEqual(make_url_name("", ["_1"]),
                          "_2") # Increment the numbers
-                         
+
+    def testLoadFunkyUrl(self):
+        # TODO test that URL mapper lets us load a page with a hypehn in th ename!!
+        pass
 
         
     def testWorksGetUniqueUrlNames(self):
@@ -511,13 +514,36 @@ class GalleryTestCase(TestCase):
         results = c.get("/kruger/plans/wolves_1")
         self.assertEqual(results.status_code, 200)
         self.assertIn("<h2>wolves</h2>", results.content)
-        
 
-        # TODO test that URL mapper lets us load a page with a hypehn in th ename!!
-        # TODO test that we can submit a blank title and that it gets titled with a
-        # number (don't care if title is a number actually just that there's *something* to
-        # click on , on the gallery page!)
-                # What do we post when adding a new work to a gallery?
+    def testBlankTitle(self):
+        c = Client()
+        self.createBasicUser()
+        results = c.post("/accounts/login/", {"username": "kruger",
+                                              "password": "stormlord"})
+        results = c.post("/kruger/newgallery", {"title": "plans",
+                                        "blurb": "**for destroying civilization**",
+                                        "publicity": "PRI"})
+        # Test that we can submit a blank title and that it gets titled with a
+        # number (don't care if title is a number actually just that there's
+        # *something* to click on , on the gallery page!)
+
+        results = c.post("/kruger/plans/new", {"workType": "PIC",
+                                               "title": "",
+                                               "body": "hello",
+                                               "publicity": "PRI"})
+        self.assertEqual(results.status_code, 302)
+        results = c.get("/kruger/plans")
+        self.assertEqual(results.status_code, 200)
+        # should be a link to "1" in these results:
+        self.assertIn('<a href="/kruger/plans/1">1</a>', results.content)
+        # in the future the content of this link might be a thumbnail or whatever.
+
+
+    def testLoadWorkWithDocument(self):
+        # not sure how we would test file upload?
+
+        
+        # What do we post when adding a new work to a gallery?
         # is it ready for publication or is it a draft?
         # can I upload arbitrary files? like a PDF or word document?
         # need to know what gallery it's part of (URL tells us this)

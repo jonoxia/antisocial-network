@@ -15,7 +15,8 @@
 {% block content %}
 <div id="column-container">
   <div id="left-col" class="two-column">
-    <form method="POST" action="">
+    <form method="POST" action="" enctype="multipart/form-data">
+    <!-- file upload won't work without multipart/form-data -->
     {% csrf_token %}
     {{ work_form.non_field_errors }}
     <table>

@@ -9,7 +9,7 @@ PRIVACY_SETTINGS = [("PRI", "Private"),
 
 WORK_TYPES = [("WRI", "Writing"),
               ("PIC", "Picture"),
-              ("AUD", "Audio")] # More in the future
+              ("AUD", "Audio")] # More in the future: Conversation, link?
 
 DOC_TYPES = [("IMG", "Image"),
              ("AUD", "Audio"),
@@ -61,8 +61,9 @@ class Work(models.Model):
 
 def user_directory_path(instance, filename):
     # file will be uploaded to MEDIA_ROOT/user_<id>/<filename>
-    date = datetime.date.today()
-    return 'uploads/user_{0}/{1}/{2}/{3}'.format(instance.user.id, date.year, date.month, filename)
+    date = datetime.date.today() # TODO how do we get the user here?
+    # instance.user isn't defined.
+    return 'uploads/user_{0}/{1}/{2}/{3}'.format("nindokag", date.year, date.month, filename)
 
 class Document(models.Model):
     docfile = models.FileField(upload_to = user_directory_path)

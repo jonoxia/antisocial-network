@@ -278,7 +278,6 @@ def new_work(request, personName, galleryUrlname):
 
     if request.method == "POST":
         # process new work submission here
-
         work_form = NewWorkForm(request.POST)
         document_form = DocumentForm(request.POST, request.FILES)
         if work_form.is_valid():
@@ -290,10 +289,14 @@ def new_work(request, personName, galleryUrlname):
             # Get the highest sequence num of works already in the gallery:
             existing_works = Work.objects.filter(gallery = gallery)
             if existing_works.count() > 0:
-                maxNum = max([w.sequenceNum for w in existing_works])
+                seq_num = max([w.sequenceNum for w in existing_works]) + 1
                 # could also use an order-by
             else:
-                maxNum = 0
+                seq_num = 1
+
+            if title == "":
+                # If title is blank, use sequence num for title:
+                title = str(seq_num)
             used_titles = [w.title for w in Work.objects.filter(gallery = gallery)]
             urlname = make_url_name(title, used_titles)
             newwork = Work.objects.create(gallery = gallery,
@@ -303,13 +306,20 @@ def new_work(request, personName, galleryUrlname):
                                           body = body,
                                           modifyDate = datetime.datetime.now(),
                                           thumbnailUrl = "",
-                                          sequenceNum = maxNum + 1)
+                                          sequenceNum = seq_num)
             
             # If there was a document form, create that too:
             if document_form.is_valid():
-                newdoc = Document(docfile = request.FILES['docfile'])
+                print "Document form is valid"
+                docfile = document_form.cleaned_data["docfile"]
+                filetype = document_form.cleaned_data["filetype"]
+                newdoc = Document.objects.create(docfile = docfile,
+                                                 filetype = filetype
+                                                 )
                 newdoc.works.add(newwork)
                 newdoc.save()
+            else:
+                print "Document form is invalid because"
 
             # Redirect to the work page for the new work:
             return redirect("/%s/%s/%s" % (personName, galleryUrlname, urlname) )
