@@ -22,8 +22,12 @@
 
       {% if documents %}
         <ul>
-          {% for document in documents %}
-              <li><a href="{{ document.docfile.url }}">{{ document.docfile.name }}</a></li>
+	  {% for document in documents %}
+	     {% if document.filetype == "IMG" %}
+               <img src="{{ document.docfile.url }}">
+             {% else %}
+               <a href="{{ document.docfile.url }}">{{ document.docfile.url }}</a>
+             {% endif %}
           {% endfor %}
         </ul>
       {% else %}

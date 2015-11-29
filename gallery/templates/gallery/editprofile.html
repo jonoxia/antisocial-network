@@ -3,9 +3,16 @@
 
 Editing profile for {{ person.publicName }}.
 
-<form method="POST" action="">
+<form method="POST" action="" enctype="multipart/form-data">
 {% csrf_token %}
-{{ form.as_p }}
+<table>
+  {{ bio_form.as_table }}
+</table>
+<img src="{{ person.pictureUrl }}">
+<p>Upload a picture to be your user icon:</p>
+<table>
+  {{ document_form.as_table }}
+</table>
 <input type="submit" value="Save"/>
 </form>
 

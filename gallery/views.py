@@ -158,15 +158,28 @@ def edit_my_profile(request, personName):
         return redirect("/%s" % (personName) )
 
     if request.method == "POST":
-        form = EditProfileForm(request.POST)
-        if form.is_valid():
-            bio = form.cleaned_data["bio"]
+        bio_form = EditProfileForm(request.POST)
+        document_form = DocumentForm(request.POST, request.FILES)
+        if bio_form.is_valid():
+            bio = bio_form.cleaned_data["bio"]
             person.bio = bio
             person.save()
+            
+            if document_form.is_valid():
+                docfile = document_form.cleaned_data["docfile"]
+                filetype = document_form.cleaned_data["filetype"]
+                newdoc = Document.objects.create(docfile = docfile,
+                                                filetype = filetype
+                                                )
+                person.pictureUrl = newdoc.docfile.url
+                person.save()
+
             return redirect("/%s" % (personName))
     else:
-        form = EditProfileForm(initial = {"bio": person.bio})
-    data = {"form": form, "errorMsg": "", "person": person}
+        bio_form = EditProfileForm(initial = {"bio": person.bio})
+        document_form = DocumentForm()
+    data = {"bio_form": bio_form, "document_form": document_form,
+            "person": person}
     return render_to_response('gallery/editprofile.html', data,
                     context_instance=RequestContext(request))
 
@@ -310,7 +323,6 @@ def new_work(request, personName, galleryUrlname):
             
             # If there was a document form, create that too:
             if document_form.is_valid():
-                print "Document form is valid"
                 docfile = document_form.cleaned_data["docfile"]
                 filetype = document_form.cleaned_data["filetype"]
                 newdoc = Document.objects.create(docfile = docfile,
@@ -318,8 +330,6 @@ def new_work(request, personName, galleryUrlname):
                                                  )
                 newdoc.works.add(newwork)
                 newdoc.save()
-            else:
-                print "Document form is invalid because"
 
             # Redirect to the work page for the new work:
             return redirect("/%s/%s/%s" % (personName, galleryUrlname, urlname) )

@@ -541,35 +541,5 @@ class GalleryTestCase(TestCase):
 
     def testLoadWorkWithDocument(self):
         # not sure how we would test file upload?
-
+        pass
         
-        # What do we post when adding a new work to a gallery?
-        # is it ready for publication or is it a draft?
-        # can I upload arbitrary files? like a PDF or word document?
-        # need to know what gallery it's part of (URL tells us this)
-        # What is the type?
-        #  type 1: simple picture with optional caption
-        #            (can i replace the picture while editing? or not?)
-        #  type 2: blog post: a lot of text in markdown, with optional pictures
-        #            interspersed
-        #  (note type 2 is a superset of type 1 -- they could be stored the same
-        #    way but the UI for creating and viewing them might be different)
-        #  type 3: audio file:
-        #  type 4: quick link: an external URL with a caption or content
-        #  type 5: interactive (i.e. custom javascript files e.g. a game)
-
-        # future features:  Move a work to another gallery
-        #   share a work between multiple galleries?
-        #       i.e. this goes in my "all my writings" gallery as well as my
-        #       "all my complaints about computers" gallery
-        #   share a work between multiple humans?
-        #   edit a work
-        #   publish a work (public or friends-only)
-        #   see all my drafts
-        #   choose gallery style
-        #   choose gallery display order (chronological vs. alphabetical by title vs.
-        #    custom order vs. something else?)
-
-
-        # MINIMAL FEATURES for me to start using this website as a website:
-        # new work, edit work, style the gallery page, style the work page
