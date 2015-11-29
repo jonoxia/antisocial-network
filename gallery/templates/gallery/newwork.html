@@ -17,7 +17,14 @@
   <div id="left-col" class="two-column">
     <form method="POST" action="">
     {% csrf_token %}
-    {{ form.as_p }}
+    {{ work_form.non_field_errors }}
+    <table>
+    {{ work_form.as_table }}
+    </table>
+    {{ document_form.non_field_errors }}
+    <table>
+    {{ document_form.as_table}}
+    </table>
     <input type="submit" value="Save"/>
     </form>
   </div>

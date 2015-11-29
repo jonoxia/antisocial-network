@@ -1,13 +1,19 @@
 from django.db import models
 from django.contrib.auth.models import User
+import datetime
 
 PRIVACY_SETTINGS = [("PRI", "Private"),
                     ("FRO", "Friends-Only"),
                     ("PUB", "Public")]  # Probably more settings here in future.
+                    # does DRAFT need to be different from PRIVATE?
 
 WORK_TYPES = [("WRI", "Writing"),
               ("PIC", "Picture"),
               ("AUD", "Audio")] # More in the future
+
+DOC_TYPES = [("IMG", "Image"),
+             ("AUD", "Audio"),
+             ("MOV", "Movie")]
 
 class Human(models.Model):
     account = models.ForeignKey(User, null=False)
@@ -36,9 +42,8 @@ class Work(models.Model):
     gallery = models.ForeignKey(Gallery, null=False)
     urlname = models.TextField(null=False) # used when referring to work in part of url
     thumbnailUrl = models.TextField()
-    imageUrl = models.TextField()
     sequenceNum = models.IntegerField() # optional, used if gallery is ordered
-    title = models.TextField() # optional, i.e. picture posts don't have it
+    title = models.TextField(default="") # optional, i.e. picture posts don't have it
     body = models.TextField()
     workType = models.TextField() # 
     publishDate = models.DateTimeField(null=True, default=None)
@@ -53,8 +58,18 @@ class Work(models.Model):
 # it's like a static page with a ton of javascript files... goes in a gallery by itself
 # hmmm.
 
+
+def user_directory_path(instance, filename):
+    # file will be uploaded to MEDIA_ROOT/user_<id>/<filename>
+    date = datetime.date.today()
+    return 'uploads/user_{0}/{1}/{2}/{3}'.format(instance.user.id, date.year, date.month, filename)
+
 class Document(models.Model):
-    docfile = models.FileField(upload_to = 'documents/%Y/%m/%d')
+    docfile = models.FileField(upload_to = user_directory_path)
+    filetype = models.CharField(max_length=3,
+                                choices=DOC_TYPES,
+                                default="IMG")
+    works = models.ManyToManyField(Work, related_name="documents")
 
 
 class Tag(models.Model):

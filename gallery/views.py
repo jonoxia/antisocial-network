@@ -138,12 +138,14 @@ def work_page(request, personName, galleryUrlname, workUrlname):
         nextWork = siblings[myIndex + 1]
     else:
         nextWork = None
-        
+
+    documents = work.documents.all()
     data = {"person": person, "gallery": work.gallery, "work": work,
             "mine": mine, "body": body, "previousWork": previousWork,
-            "nextWork": nextWork}
+            "nextWork": nextWork, "documents": documents}
     return render_to_response('gallery/workpage.html', data,
                     context_instance=RequestContext(request))
+
 
 def edit_my_profile(request, personName):
     matches = Human.objects.filter(publicName = personName)
@@ -197,9 +199,7 @@ def new_gallery(request, personName):
                                                  title = title,
                                                  blurb = blurb,
                                                  publicity = publicity)
-                return redirect("/%s/%s" % (personName, title))
-        else:
-            raise Exception("Invalid form %s" % str (form.errors))
+                return redirect("/%s/%s" % (personName, urlname))
     else:
         form = EditGalleryForm()
     data = {"person": person, "form": form, "errorMsg": errorMsg}
@@ -279,15 +279,13 @@ def new_work(request, personName, galleryUrlname):
     if request.method == "POST":
         # process new work submission here
 
-        form = NewWorkForm(request.POST)
-        if form.is_valid():
-            title = form.cleaned_data["title"]
-            workType = form.cleaned_data["workType"]
-            body = form.cleaned_data["body"]
-            publicity = form.cleaned_data["publicity"]
-
-            # TODO if title field is blank (which it could be for picture posts),
-            # give it an auto-generated title.
+        work_form = NewWorkForm(request.POST)
+        document_form = DocumentForm(request.POST, request.FILES)
+        if work_form.is_valid():
+            title = work_form.cleaned_data["title"] # blank is OK
+            workType = work_form.cleaned_data["workType"]
+            body = work_form.cleaned_data["body"]
+            publicity = work_form.cleaned_data["publicity"]
 
             # Get the highest sequence num of works already in the gallery:
             existing_works = Work.objects.filter(gallery = gallery)
@@ -298,24 +296,29 @@ def new_work(request, personName, galleryUrlname):
                 maxNum = 0
             used_titles = [w.title for w in Work.objects.filter(gallery = gallery)]
             urlname = make_url_name(title, used_titles)
-            Work.objects.create(gallery = gallery,
-                                urlname = urlname,
-                                title = title,
-                                workType = workType,
-                                body = body,
-                                modifyDate = datetime.datetime.now(),
-                                thumbnailUrl = "",
-                                imageUrl = "",
-                                sequenceNum = maxNum + 1)
+            newwork = Work.objects.create(gallery = gallery,
+                                          urlname = urlname,
+                                          title = title,
+                                          workType = workType,
+                                          body = body,
+                                          modifyDate = datetime.datetime.now(),
+                                          thumbnailUrl = "",
+                                          sequenceNum = maxNum + 1)
+            
+            # If there was a document form, create that too:
+            if document_form.is_valid():
+                newdoc = Document(docfile = request.FILES['docfile'])
+                newdoc.works.add(newwork)
+                newdoc.save()
+
             # Redirect to the work page for the new work:
             return redirect("/%s/%s/%s" % (personName, galleryUrlname, urlname) )
-        else:
-            raise Exception("Invalid form %s" % str (form.errors))
     else:
-        form = NewWorkForm()
-
-        data = {"person": person, "gallery": gallery, "errorMsg": "", "form": form}
-        return render_to_response('gallery/newwork.html', data,
+        work_form = NewWorkForm()
+        document_form = DocumentForm()
+    data = {"person": person, "gallery": gallery, "errorMsg": "", 
+            "work_form": work_form, "document_form": document_form}
+    return render_to_response('gallery/newwork.html', data,
                         context_instance=RequestContext(request))
 
 
@@ -355,6 +358,8 @@ def edit_work(request, personName, galleryUrlname, workUrlname):
             work.body = body
             work.publicity = publicity
             work.save()
+
+            # TODO let me attach additional docs here if i want
 
             # Redirect to the work page for the edited work:
             return redirect("/%s/%s/%s" % (personName, galleryUrlname, work.urlname) )

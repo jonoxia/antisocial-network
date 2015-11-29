@@ -512,8 +512,11 @@ class GalleryTestCase(TestCase):
         self.assertEqual(results.status_code, 200)
         self.assertIn("<h2>wolves</h2>", results.content)
         
-        
 
+        # TODO test that URL mapper lets us load a page with a hypehn in th ename!!
+        # TODO test that we can submit a blank title and that it gets titled with a
+        # number (don't care if title is a number actually just that there's *something* to
+        # click on , on the gallery page!)
                 # What do we post when adding a new work to a gallery?
         # is it ready for publication or is it a draft?
         # can I upload arbitrary files? like a PDF or word document?

@@ -7,11 +7,11 @@ urlpatterns = patterns('',
     url(r'^(\w+)$', views.person_page),
     url(r'^(\w+)/edit$', views.edit_my_profile),
     url(r'^(\w+)/newgallery$', views.new_gallery),
-    url(r'^(\w+)/(\w+)$', views.gallery_page),
-    url(r'^(\w+)/(\w+)/edit$', views.edit_gallery),
-    url(r'^(\w+)/(\w+)/new$', views.new_work),
-    url(r'^(\w+)/(\w+)/(\w+)$', views.work_page),
-    url(r'^(\w+)/(\w+)/(\w+)/edit$', views.edit_work),
+    url(r'^(\w+)/([\w\-_]+)$', views.gallery_page),
+    url(r'^(\w+)/([\w\-_]+)/edit$', views.edit_gallery),
+    url(r'^(\w+)/([\w\-_]+)/new$', views.new_work),
+    url(r'^(\w+)/([\w\-_]+)/([\w\-_]+)$', views.work_page),
+    url(r'^(\w+)/([\w\-_]+)/([\w\-_]+)/edit$', views.edit_work),
 )
 
 # Don't allow the user to give a name to a work or gallery that conflicts with

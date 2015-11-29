@@ -7,7 +7,9 @@ Creating a new gallery for {{ person.publicName }}.
 
 <form method="POST" action="">
 {% csrf_token %}
-{{ form.as_p }}
+{{ form.non_field_errors }}
+{{ form.errors }}
+{{ form.as_table }}
 <input type="submit" value="Save"/>
 </form>
 
