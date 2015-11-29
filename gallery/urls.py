@@ -3,7 +3,6 @@ import views
 
 urlpatterns = patterns('',
     url(r'^preview$', views.preview_work),
-    url(r'^uploadtest$', views.upload_test),
     url(r'^(\w+)$', views.person_page),
     url(r'^(\w+)/edit$', views.edit_my_profile),
     url(r'^(\w+)/newgallery$', views.new_gallery),
