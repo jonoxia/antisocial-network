@@ -169,8 +169,8 @@ def edit_my_profile(request, personName):
                 docfile = document_form.cleaned_data["docfile"]
                 filetype = document_form.cleaned_data["filetype"]
                 newdoc = Document.objects.create(docfile = docfile,
-                                                filetype = filetype
-                                                )
+                                                 filetype = filetype,
+                                                 owner = person)
                 person.pictureUrl = newdoc.docfile.url
                 person.save()
 
@@ -326,8 +326,8 @@ def new_work(request, personName, galleryUrlname):
                 docfile = document_form.cleaned_data["docfile"]
                 filetype = document_form.cleaned_data["filetype"]
                 newdoc = Document.objects.create(docfile = docfile,
-                                                 filetype = filetype
-                                                 )
+                                                 filetype = filetype,
+                                                 owner = person)
                 newdoc.works.add(newwork)
                 newdoc.save()
 

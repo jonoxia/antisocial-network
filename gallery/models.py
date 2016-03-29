@@ -59,17 +59,18 @@ class Work(models.Model):
 # hmmm.
 
 
-def user_directory_path(instance, filename):
-    # file will be uploaded to MEDIA_ROOT/user_<id>/<filename>
-    date = datetime.date.today() # TODO how do we get the user here?
-    # instance.user isn't defined.
-    return 'uploads/user_{0}/{1}/{2}/{3}'.format("nindokag", date.year, date.month, filename)
+def user_directory_path(self, filename):
+    # file will be uploaded to MEDIA_ROOT/<username>/<year>/<month>/<filename>
+    date = datetime.date.today()
+    return 'uploads/{0}/{1}/{2}/{3}'.format(self.owner.publicName, date.year,
+                                            date.month, filename)
 
 class Document(models.Model):
     docfile = models.FileField(upload_to = user_directory_path)
     filetype = models.CharField(max_length=3,
                                 choices=DOC_TYPES,
                                 default="IMG")
+    owner = models.ForeignKey(Human, null=True)
     works = models.ManyToManyField(Work, related_name="documents")
 
 
