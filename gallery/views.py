@@ -37,7 +37,7 @@ def make_url_name(title, existing_names):
     urlname = "-".join(pieces)
 
     # If you match a reserved word, add a numeric suffix:
-    reserved_words = ["edit", "new", "newgallery", "preview", ""]
+    reserved_words = ["edit", "new", "newgallery", "preview", "delete", ""]
     # TODO don't allow using these as usernames either!
     if urlname in reserved_words:
         suffix = 1
@@ -74,6 +74,23 @@ def person_page(request, personName):
                     context_instance=RequestContext(request))
 
 
+def gallery_link_for_work(work, gallery_theme = None):
+    # TODO make this a method of the Work model?
+    # TODO return an HTML snippet (made from pre-rendering a template?) or
+    #  return an object with fields that render into the gallery template? hmmm.
+    # choose a template based on the work's type and the gallery theme?
+
+    work_url = "/%s/%s/%s" % (work.gallery.author.publicName,
+                              work.gallery.urlname,
+                              work.urlname)
+    
+    if work.workType == "PIC" and work.thumbnail is not None:
+        image_url = work.thumbnail.docfile.url
+        return '<li><a href="%s"><img src="%s" width="50" height="50"></a></li>' % (work_url, image_url)
+    else:
+        return '<li>Thumbnail of <a href="%s">%s</a> (%s)</li>' % (work_url, work.title, work.workType)
+
+
 def gallery_page(request, personName, galleryUrlname):
     matches = Human.objects.filter(publicName = personName)
     if len(matches) == 0:
@@ -97,7 +114,7 @@ def gallery_page(request, personName, galleryUrlname):
             return redirect("/%s" % (personName) )
 
     works = Work.objects.filter(gallery = gallery)
-    data["works"] = works
+    data["works"] = [gallery_link_for_work(w) for w in works]
         
     return render_to_response('gallery/gallerypage.html', data,
                     context_instance=RequestContext(request))

@@ -21,12 +21,12 @@
 
 <div id="works-list">
   <ul>
-    {% for work in works %}
-    <li>
-      <a href="/{{person.publicName}}/{{gallery.urlname}}/{{work.urlname}}">{{work.title}}</a>
-    </li>
+    {% for preview in works %}
+      {% autoescape off %}
+        {{ preview }}
+      {% endautoescape %}
     {% endfor %}
-    </ul>
+  </ul>
 </div>
 
 {% if editable %}
