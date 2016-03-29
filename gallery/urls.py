@@ -11,6 +11,7 @@ urlpatterns = patterns('',
     url(r'^(\w+)/([\w\-_]+)/new$', views.new_work),
     url(r'^(\w+)/([\w\-_]+)/([\w\-_]+)$', views.work_page),
     url(r'^(\w+)/([\w\-_]+)/([\w\-_]+)/edit$', views.edit_work),
+    url(r'^(\w+)/([\w\-_]+)/([\w\-_]+)/delete$', views.delete_work),
 )
 
 # Don't allow the user to give a name to a work or gallery that conflicts with

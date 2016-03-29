@@ -402,4 +402,37 @@ def preview_work(request):
         body = request.POST.get("body", None)
         html = markdown.markdown(body) # parse markdown for display
         return JsonResponse({"html": html})
+
+
+def delete_work(request, personName, galleryUrlname, workUrlname):
+    errorMsg = ""
     
+    # Look up the person:
+    matches = Human.objects.filter(publicName = personName)
+    if len(matches) == 0:
+        return render_to_response('gallery/404.html', {},
+                        context_instance=RequestContext(request))
+    person = matches[0]
+
+    # Look up the gallery
+    matches = Gallery.objects.filter(urlname = galleryUrlname)
+    if len(matches) == 0:
+        return render_to_response('gallery/404.html', {},
+                        context_instance=RequestContext(request))
+    gallery = matches[0]
+    
+    if request.user != person.account:
+        # Only I can edit my works:
+        return redirect("/%s/%s" % (personName, galleryUrlname) )
+
+    work = Work.objects.get(gallery = gallery, urlname = workUrlname)
+    # LONGTERM TODO a lot of duplicated code from edit_work -- refactor?
+
+    work.delete()
+    
+    # TODO delete any documents that are only used in the deleted work? Or leave them?
+    # OR maybe just remove the work from the gallery but leave it around so it could be
+    # recovered?
+
+    return redirect("/%s/%s" % (personName, galleryUrlname) )
+

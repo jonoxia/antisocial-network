@@ -11,6 +11,7 @@
     <h2>{{ work.title }}</h2>
     {% if mine %}
     <a href="/{{person.publicName}}/{{gallery.urlname}}/{{work.urlname}}/edit">Edit</a>
+    <a href="/{{person.publicName}}/{{gallery.urlname}}/{{work.urlname}}/delete">Delete</a>
     {% endif %}
 
     <p>By <a href="/{{person.publicName}}">{{ person.publicName }}</a>. Last modified {{ work.modifyDate }}. Part of the gallery <a href="/{{person.publicName}}/{{gallery.urlname}}">{{gallery.title}}</a>.</p>
