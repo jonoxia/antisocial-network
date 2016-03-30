@@ -8,11 +8,15 @@ from django.template import RequestContext
 import markdown
 import datetime
 import re
+# import Pillow
+import os
+from PIL import Image
 
 from gallery.models import PRIVACY_SETTINGS
 from gallery.models import Human, Gallery, Work, Document
 from gallery.forms import EditProfileForm, DocumentForm
 from gallery.forms import EditGalleryForm, NewWorkForm, EditWorkForm
+
 
 def make_url_name(title, existing_names):
     # generates a unique, url-appropriate name from the given title
@@ -55,6 +59,36 @@ def make_url_name(title, existing_names):
     
     return urlname
 
+
+def compress_image(document):
+    # make this a method of Document model?
+    # when do we call this? on any new document creation which is image type?
+    
+    # See http://www.pythonware.com/library/pil/handbook/introduction.htm
+    # i need 
+    # im = Image.open(infilename)
+    # im.save(outfilename, "JPEG", quality = 90)
+    pass
+
+
+def make_thumbnail(document):
+    path = document.docfile.path # gives absolute path to document's file
+    url = document.docfile.url
+
+    size = 128, 128
+    filename, ext = os.path.splitext(path)
+    im = Image.open(path)
+    im.thumbnail(size)
+    thumbfile = filename + "_thumb.jpg"
+    print "thumbfile is ", thumbfile
+    im.save(thumbfile, "JPEG")
+    print "Saved thumbnail"
+    # returns path to the thumbnail, but should return URL of the thumbnail:
+
+    thumburl = ".".join(url.split(".")[:-1]) + "_thumb.jpg"
+    return thumburl
+    
+
 def person_page(request, personName):
     matches = Human.objects.filter(publicName = personName)
     if len(matches) == 0:
@@ -84,11 +118,11 @@ def gallery_link_for_work(work, gallery_theme = None):
                               work.gallery.urlname,
                               work.urlname)
     
-    if work.workType == "PIC" and work.thumbnail is not None:
-        image_url = work.thumbnail.docfile.url
-        return '<li><a href="%s"><img src="%s" width="50" height="50"></a></li>' % (work_url, image_url)
+    if work.workType == "PIC" and work.thumbnailUrl != "":
+        return '<li><a href="%s"><img src="%s" width="128" height="128"></a></li>' % (work_url,
+                                                                                    work.thumbnailUrl)
     else:
-        return '<li>Thumbnail of <a href="%s">%s</a> (%s)</li>' % (work_url, work.title, work.workType)
+        return '<li><a href="%s">%s</a> (%s)</li>' % (work_url, work.title, work.workType)
 
 
 def gallery_page(request, personName, galleryUrlname):
@@ -347,6 +381,12 @@ def new_work(request, personName, galleryUrlname):
                                                  owner = person)
                 newdoc.works.add(newwork)
                 newdoc.save()
+
+            # Create thumbnail for PIC works:
+            if newwork.workType == "PIC" and newwork.documents.count() > 0:
+                newwork.thumbnailUrl = make_thumbnail( newwork.documents.all()[0] )
+                newwork.save()
+
 
             # Redirect to the work page for the new work:
             return redirect("/%s/%s/%s" % (personName, galleryUrlname, urlname) )

@@ -45,12 +45,14 @@ class Work(models.Model):
     sequenceNum = models.IntegerField() # optional, used if gallery is ordered
     title = models.TextField(default="") # optional, i.e. picture posts don't have it
     body = models.TextField()
-    workType = models.TextField() # 
+    workType = models.TextField() # maybe make this null=false? a char field?
     publishDate = models.DateTimeField(null=True, default=None)
     modifyDate = models.DateTimeField()
     publicity = models.CharField(max_length=3,
                                  choices=PRIVACY_SETTINGS,
                                  default="PRI")
+    #thumbnail = models.ForeignKey(Document, null=True) # use this as thumbnail if present
+    
 # TODO should this have an author or do we just assume it's the gallery author?
 # Can we cross-include the same work in multiple galleries?
 # This can hold both pictures and blog posts, so it's pretty flexible...
@@ -70,7 +72,7 @@ class Document(models.Model):
     filetype = models.CharField(max_length=3,
                                 choices=DOC_TYPES,
                                 default="IMG")
-    owner = models.ForeignKey(Human, null=True)
+    owner = models.ForeignKey(Human, null=True) # TODO i want to make this false
     works = models.ManyToManyField(Work, related_name="documents")
 
 
