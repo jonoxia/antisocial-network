@@ -61,29 +61,39 @@ def make_url_name(title, existing_names):
 
 
 def compress_image(document):
+    # If document.docfile is an image that is wider than MAX_IMG_WIDTH, scale it down
+    # to that size, and save it as web-quality JPEG using PIL.
     # make this a method of Document model?
     # when do we call this? on any new document creation which is image type?
-    
-    # See http://www.pythonware.com/library/pil/handbook/introduction.htm
-    # i need 
-    # im = Image.open(infilename)
-    # im.save(outfilename, "JPEG", quality = 90)
-    pass
+
+    MAX_IMG_WIDTH = 1024
+
+    if document.filetype == "IMG":
+        path = document.docfile.path
+        img = Image.open(path)
+        if img.width > MAX_IMG_WIDTH:
+            wpercent = MAX_IMG_WIDTH/float(img.width)
+            hsize = int((float(img.height)*float(wpercent)))
+            img = img.resize((MAX_IMG_WIDTH, hsize), Image.ANTIALIAS)
+            img.save(document.docfile.path)
 
 
 def make_thumbnail(document):
     path = document.docfile.path # gives absolute path to document's file
     url = document.docfile.url
 
-    size = 128, 128
+    THUMBNAIL_WIDTH = 256
+
     filename, ext = os.path.splitext(path)
-    im = Image.open(path)
-    im.thumbnail(size)
+    img = Image.open(path)
+
+    wpercent = THUMBNAIL_WIDTH/float(img.width)
+    hsize = int((float(img.height)*float(wpercent)))
+    
+    img.thumbnail((THUMBNAIL_WIDTH, hsize))
     thumbfile = filename + "_thumb.jpg"
-    print "thumbfile is ", thumbfile
-    im.save(thumbfile, "JPEG")
-    print "Saved thumbnail"
-    # returns path to the thumbnail, but should return URL of the thumbnail:
+    img.save(thumbfile, "JPEG")
+    # return URL of the thumbnail:
 
     thumburl = ".".join(url.split(".")[:-1]) + "_thumb.jpg"
     return thumburl
@@ -119,8 +129,7 @@ def gallery_link_for_work(work, gallery_theme = None):
                               work.urlname)
     
     if work.workType == "PIC" and work.thumbnailUrl != "":
-        return '<li><a href="%s"><img src="%s" width="128" height="128"></a></li>' % (work_url,
-                                                                                    work.thumbnailUrl)
+        return '<li><a href="%s"><img src="%s"></a></li>' % (work_url, work.thumbnailUrl)
     else:
         return '<li><a href="%s">%s</a> (%s)</li>' % (work_url, work.title, work.workType)
 
@@ -222,6 +231,7 @@ def edit_my_profile(request, personName):
                 newdoc = Document.objects.create(docfile = docfile,
                                                  filetype = filetype,
                                                  owner = person)
+                compress_image(newdoc)
                 person.pictureUrl = newdoc.docfile.url
                 person.save()
 
@@ -379,6 +389,7 @@ def new_work(request, personName, galleryUrlname):
                 newdoc = Document.objects.create(docfile = docfile,
                                                  filetype = filetype,
                                                  owner = person)
+                compress_image(newdoc)
                 newdoc.works.add(newwork)
                 newdoc.save()
 
