@@ -44,7 +44,7 @@ class Work(models.Model):
     thumbnailUrl = models.TextField()
     sequenceNum = models.IntegerField() # optional, used if gallery is ordered
     title = models.TextField(default="") # optional, i.e. picture posts don't have it
-    body = models.TextField()
+    body = models.TextField(default="") # optional, picture posts don't have to have one
     workType = models.TextField() # maybe make this null=false? a char field?
     publishDate = models.DateTimeField(null=True, default=None)
     modifyDate = models.DateTimeField()

@@ -18,9 +18,10 @@ class EditWorkForm(forms.Form):
 
 class NewWorkForm(forms.Form):
     title = forms.CharField(required=False) # title is optional
-    body = forms.CharField(widget = forms.Textarea())
+    body = forms.CharField(widget = forms.Textarea(), required=False)
     publicity = forms.ChoiceField(choices = PRIVACY_SETTINGS, initial="PRI")
     workType = forms.ChoiceField(choices = WORK_TYPES, initial="WRI")
+    addAnother = forms.BooleanField() # "create another after this one?"
 
 class DocumentForm(forms.Form):
     docfile = forms.FileField(

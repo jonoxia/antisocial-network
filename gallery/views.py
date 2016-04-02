@@ -407,11 +407,23 @@ def new_work(request, personName, galleryUrlname):
                 newwork.thumbnailUrl = make_thumbnail( newwork.documents.all()[0] )
                 newwork.save()
 
-
-            # Redirect to the work page for the new work:
-            return redirect("/%s/%s/%s" % (personName, galleryUrlname, urlname) )
+            
+            # If the "add another" checkbox is checked, then redirect to a new work form.
+            # otherwise, redirect to the work page for the newly uploaded work.
+            addAnother = work_form.cleaned_data["addAnother"]
+            if addAnother:
+                return redirect("/%s/%s/new?addAnother=true" % (personName, galleryUrlname) )
+            else:
+                return redirect("/%s/%s/%s" % (personName, galleryUrlname, urlname) )
     else:
-        work_form = NewWorkForm()
+        # Show the form for creating a new work.
+        defaultType = request.GET.get("worktype", None) # read work type from URL
+        if defaultType is None:
+            defaultType = "PIC" # default to picture... for now.
+        defaults = {"workType": defaultType,
+                    "addAnother": request.GET.get("addAnother", False), # save checkbox value
+                    "publicity": gallery.publicity} # publicity defaults to publicity of gallery
+        work_form = NewWorkForm(initial = defaults)
         document_form = DocumentForm()
     data = {"person": person, "gallery": gallery, "errorMsg": "", 
             "work_form": work_form, "document_form": document_form}
