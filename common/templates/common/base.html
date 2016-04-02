@@ -9,40 +9,64 @@
 {% endblock %}
 
 <link href="/static/common/main.css" type="text/css" rel="stylesheet"/>
-<!-- <link href="/static/common/css/stylez.css" rel='stylesheet' type='text/css'> -->
 {% block extracss %}
 {% endblock %}
 </head>
 
 <body>
-  <div class="centered-outer">
-    <div class="centered">
-      {% block header %}
-      {% endblock %}
-    </div>
+  <div id="header">
+    <table width = "100%">
+      <tr>
+      <td width="30%" align="left">
+	<a href="">What's the deal with this website?</a>
+      </td>
+
+      <td width="40%">
+	<div class="centered-outer">
+          <div class="centered">
+	    {% block header %}
+	    {% endblock %}
+	  </div>
+	</div>
+      </td>
+
+      <td width="30%" align="right">
+	{% if viewer %}
+          <a href="/{{viewer.publicName}}">Home</a>&nbsp;
+          You are logged in as: {{viewer.publicName}}&nbsp;
+          <a href="">Logout</a>
+	{% else %}
+	  <a href="/">Login</a> &nbsp;&nbsp; <a href="/accounts/create">Sign Up</a>  
+	{% endif %}
+      </td>
+      </tr>
+    </table>
   </div>
 
-  <div id="content-container" class="centered-outer">
-    <div id="content" class="centered">
-      {% block content %}
-      {% endblock %}
-    </div>
-  </div>
 
-  <div id="sidebar">
-    {% block sidebar %}
-    {% endblock %}
-  </div>
-
-
-  <div id="content-container" class="centered-outer">
-    <div id="content" class="centered">
-      <br><br><br>
-      This website is<br>
-      <img src="/static/common/under_construction.gif"><br>
-      under construction.
-    </div>
-  </div>
+  <table width="100%">
+    <tr>
+      <td width="80%" id="main">
+	<div id="content-container" class="centered-outer">
+	  <div id="content" class="centered">
+	    {% block content %}
+	    {% endblock %}
+	    
+	    <br><br><br><hr>
+	    This website is<br>
+	    <img src="/static/common/under_construction.gif"><br>
+	    under construction.
+	  </div>
+	</div>
+      </td>
+      <td width = "20%" id="sidebar" valign="top">
+	<div class="navigation">
+          {% block sidebar %}
+          {% endblock %}
+	</div>
+      </td>
+    </tr>
+  </table>
 
 </body>
 </html>

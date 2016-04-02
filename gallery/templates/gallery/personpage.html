@@ -1,32 +1,33 @@
 {% extends "common/base.html" %}
 
 {% block header %}
-<h1>The Antisocial Network</h1>
+<h1>{{ person.publicName }}'s Profile</h1>
 {% endblock %}
 
 
 {% block content %}
 
-Person page for {{ person.publicName }}
+<p><img src="{{ person.pictureUrl }}"></p>
 
-<img src="{{ person.pictureUrl }}">
+<h2>{{ person.publicName }}'s Bio</h2>
+<div class="work-body-text">
+  {% autoescape off %}
+  {{ bio }}
+  {% endautoescape %}
+</div>
 
-<h2>Bio</h2>
-{% autoescape off %}
-{{ bio }}
-{% endautoescape %}
 
-{% if editable %}
-  <a href="/{{person.publicName}}/edit">Edit</a>
-{% endif %}
+<h2>{{ person.publicName }}'s Galleries</h2>
+<div class="navigation">
+  {% for gallery in galleries %}
+    <p><a href="/{{person.publicName}}/{{gallery.urlname}}">{{gallery.title}}</a></p>
+  {% endfor %}
+</div>
+{% endblock %}
 
-<h2>Galleries</h2>
-{% for gallery in galleries %}
-  <p><a href="/{{person.publicName}}/{{gallery.urlname}}">{{gallery.title}}</a></p>
-{% endfor %}
-
-{% if editable %}
-  <a href="/{{person.publicName}}/newgallery">New Gallery</a>
-{% endif %}
-
+{% block sidebar %}
+  {% if editable %}
+    <p><a href="/{{person.publicName}}/edit">Edit Bio</a></p>
+    <p><a href="/{{person.publicName}}/newgallery">New Gallery</a></p>
+  {% endif %}
 {% endblock %}

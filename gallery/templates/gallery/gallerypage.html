@@ -1,26 +1,32 @@
 {% extends "common/base.html" %}
+
+{% block extracss %}
+<link href="/static/gallery/css/responsive-image-grid.css" type="text/css" rel="stylesheet"/>
+{% endblock %}
+
+{% block header %}
+<h1>{{ gallery.title }}</h1>
+<h2>a
+{% if gallery.publicity == 'PRI' %}
+  private
+{% elif gallery.publicity == 'FRO' %}
+  friends-only
+{% else %}
+  public
+{% endif %}
+gallery by {{person.publicName}}</h2>
+{% endblock %}
+
 {% block content %}
 
-<h2>Gallery {{ gallery.title }}</h2>
-<p>By <a href="/{{ person.publicName }}">{{person.publicName}}</a>.</p>
-{% if gallery.publicity == 'PRI' %}
-    <p>Private Collection</p>
-{% elif gallery.publicity == 'FRO' %}
-    <p>Friends-Only Collection</p>
-{% else %}
-    <p>Public Collection</p>
-{% endif %}
-
-<h2>{{ gallery.title }}</h2>
-
+<p class="work-body-text">
 {% autoescape off %}
 {{ blurb }}
 {% endautoescape %}
-
-<p>By <a href="/{{person.publicName}}">{{ person.publicName }}</a>.</p>
+</p>
 
 <div id="works-list">
-  <ul>
+  <ul class="rig columns-4">
     {% for preview in works %}
       {% autoescape off %}
         {{ preview }}
@@ -28,9 +34,21 @@
     {% endfor %}
   </ul>
 </div>
-
-{% if editable %}
-  <a href="/{{person.publicName}}/{{gallery.urlname}}/new">New Work</a>
-  <a href="/{{person.publicName}}/{{gallery.urlname}}/edit">Edit Gallery</a>
-{% endif %}
 {% endblock %}
+
+{% block sidebar %}
+  {% if editable %}
+    <p><a href="/{{person.publicName}}/{{gallery.urlname}}/new">New Work</a></p>
+    <p><a href="/{{person.publicName}}/{{gallery.urlname}}/edit">Edit Gallery</a></p>
+  {% endif %}
+
+  <p><a href="/{{person.publicName}}">About {{ person.publicName }}</a></p>
+  <p><img src="{{ person.pictureUrl }}"></p>
+  <p>Other stuff by {{ person.publicName }}:</p>
+  <ul>
+  {% for gal in othergalleries %}
+    <li><a href="/{{person.publicName}}/{{gal.urlname}}">{{gal.title}}</a></li>
+  {% endfor %}
+  </ul>
+{% endblock %}
+    

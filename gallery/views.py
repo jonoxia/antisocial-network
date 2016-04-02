@@ -59,6 +59,11 @@ def make_url_name(title, existing_names):
     
     return urlname
 
+def get_viewer(request):
+    if request.user.is_authenticated():
+        return Human.objects.get(account = request.user)
+    else:
+        return None
 
 def compress_image(document):
     # If document.docfile is an image that is wider than MAX_IMG_WIDTH, scale it down
@@ -114,6 +119,7 @@ def person_page(request, personName):
         data["editable"] = False
     data["bio"] = markdown.markdown(person.bio)
 
+    data["viewer"] = get_viewer(request)
     return render_to_response('gallery/personpage.html', data,
                     context_instance=RequestContext(request))
 
@@ -158,7 +164,8 @@ def gallery_page(request, personName, galleryUrlname):
 
     works = Work.objects.filter(gallery = gallery)
     data["works"] = [gallery_link_for_work(w) for w in works]
-        
+    data["othergalleries"] = Gallery.objects.filter(author = person)
+    data["viewer"] = get_viewer(request)
     return render_to_response('gallery/gallerypage.html', data,
                     context_instance=RequestContext(request))
 
@@ -203,6 +210,8 @@ def work_page(request, personName, galleryUrlname, workUrlname):
     data = {"person": person, "gallery": work.gallery, "work": work,
             "mine": mine, "body": body, "previousWork": previousWork,
             "nextWork": nextWork, "documents": documents}
+    data["othergalleries"] = Gallery.objects.filter(author = person)
+    data["viewer"] = get_viewer(request)
     return render_to_response('gallery/workpage.html', data,
                     context_instance=RequestContext(request))
 

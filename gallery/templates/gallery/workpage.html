@@ -1,52 +1,65 @@
 {% extends "common/base.html" %}
 
 {% block header %}
-<h1>The Antisocial Network</h1>
-
-<p><a href="/{{person.publicName}}">{{ person.publicName }}</a> &gt; <a href="/{{person.publicName}}/{{gallery.urlname}}">{{gallery.title}}</a> &gt; {{work.title}}</p>
+<h1>{{ work.title }}</h1>
+<h2>part of gallery {{gallery.title}} by {{person.publicName}}</h2>
 
 {% endblock %}
 
 {% block content %}
-    <h2>{{ work.title }}</h2>
-    {% if mine %}
-    <a href="/{{person.publicName}}/{{gallery.urlname}}/{{work.urlname}}/edit">Edit</a>
-    <a href="/{{person.publicName}}/{{gallery.urlname}}/{{work.urlname}}/delete">Delete</a>
-    {% endif %}
 
-    <p>By <a href="/{{person.publicName}}">{{ person.publicName }}</a>. Last modified {{ work.modifyDate }}. Part of the gallery <a href="/{{person.publicName}}/{{gallery.urlname}}">{{gallery.title}}</a>.</p>
-
+<div class="navigation">
+  {% if previousWork %}
+  <a href="/{{person.publicName}}/{{gallery.urlname}}/{{previousWork.urlname}}">Previous: {{ previousWork.title }}</a>
+<!-- easier to implement if we had a URL for getting a work by sequence num -->
+  {% endif %}
+&nbsp;&nbsp;
+<a href="/{{person.publicName}}/{{gallery.urlname}}">Back to gallery</a>
+&nbsp;&nbsp;
+  {% if nextWork %}
+  <a href="/{{person.publicName}}/{{gallery.urlname}}/{{nextWork.urlname}}">Next: {{ nextWork.title }}</a>
+  <!-- easier to implement if we had a URL for getting a work by sequence num -->
+  {% endif %}
+</div>
+    <br><br>
     <div id="work-body">
-      {% autoescape off %}
-        {{ body }}
-      {% endautoescape %}
-
       {% if documents %}
-        <ul>
 	  {% for document in documents %}
 	     {% if document.filetype == "IMG" %}
-               <img src="{{ document.docfile.url }}">
+               <img src="{{ document.docfile.url }}" width="100%" maxwidth="1024px">
              {% else %}
                <a href="{{ document.docfile.url }}">{{ document.docfile.url }}</a>
              {% endif %}
           {% endfor %}
-        </ul>
       {% else %}
         <p>No documents.</p>
       {% endif %}
+
+      <div class="work-body-text">
+        {% autoescape off %}
+          {{ body }}
+        {% endautoescape %}
+      </div>
+
+      <p><i>Last modified {{ work.modifyDate }}.</i></p>
+
     </div>
 
 {% endblock %}
 
 {% block sidebar %}
-  {% if previousWork %}
-  <a href="/{{person.publicName}}/{{gallery.urlname}}/{{previousWork.urlname}}">Previous: {{ previousWork.title }}</a>
-<!-- easier to implement if we had a URL for getting a work by sequence num -->
+  {% if mine %}
+    <p><a href="/{{person.publicName}}/{{gallery.urlname}}/{{work.urlname}}/edit">Edit {{work.title}}</a></p>
+    <p><a href="/{{person.publicName}}/{{gallery.urlname}}/{{work.urlname}}/delete">Delete {{work.title}}</a></p>
   {% endif %}
 
-  {% if nextWork %}
-  <a href="/{{person.publicName}}/{{gallery.urlname}}/{{nextWork.urlname}}">Next: {{ nextWork.title }}</a>
-  <!-- easier to implement if we had a URL for getting a work by sequence num -->
-  {% endif %}
+  <p><a href="/{{person.publicName}}">About {{ person.publicName }}</a></p>
+  <p><img src="{{ person.pictureUrl }}"></p>
+  <p>Other stuff by {{ person.publicName }}:</p>
+  <ul>
+  {% for gal in othergalleries %}
+    <li><a href="/{{person.publicName}}/{{gal.urlname}}">{{gal.title}}</a></li>
+  {% endfor %}
+  </ul>
 
 {% endblock %}
