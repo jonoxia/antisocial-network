@@ -26,7 +26,7 @@ gallery by {{person.publicName}}</h2>
 </p>
 
 <div id="works-list">
-  <ul class="rig columns-4">
+  <ul class="{{ gallery.theme }} columns-4">
     {% for preview in works %}
       {% autoescape off %}
         {{ preview }}

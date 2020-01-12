@@ -13,15 +13,17 @@ class EditGalleryForm(forms.Form):
 
 class EditWorkForm(forms.Form):
     title = forms.CharField(required=False) # title is optional for works
-    body = forms.CharField(widget = forms.Textarea())
+    body = forms.CharField(widget = forms.Textarea(attrs={'style': 'border-color: orange', 'cols': 80, 'rows': 100}))
     publicity = forms.ChoiceField(choices = PRIVACY_SETTINGS, initial="PRI")
 
 class NewWorkForm(forms.Form):
     title = forms.CharField(required=False) # title is optional
-    body = forms.CharField(widget = forms.Textarea(), required=False)
+    body = forms.CharField(widget = forms.Textarea(attrs={'cols': 80, 'rows': 100}), required=False)
     publicity = forms.ChoiceField(choices = PRIVACY_SETTINGS, initial="PRI")
     workType = forms.ChoiceField(choices = WORK_TYPES, initial="WRI")
-    addAnother = forms.BooleanField() # "create another after this one?"
+    addAnother = forms.BooleanField(required=False)
+    # "create another after this one?"
+    # why is it still treatiing this check box as must-be-checked when i am explicitly saying reuquired=False?
 
 class DocumentForm(forms.Form):
     docfile = forms.FileField(

@@ -1,7 +1,13 @@
 {% extends "common/base.html" %}
+
+{% block extrajs %}
+<script src="/static/gallery/js/edit_work.js"></script>
+{% endblock %}
+
+
 {% block content %}
 
-Editing work {{ work }} in gallery {{ gallery }} for person {{ person }}.
+Editing work {{ work.title }} in gallery {{ gallery.title }} for person {{ person.publicName }}.
 
 <p>{{ errorMsg }}</p>
 
@@ -10,6 +16,14 @@ Editing work {{ work }} in gallery {{ gallery }} for person {{ person }}.
 {{ form.as_p }}
 <input type="submit" value="Save"/>
 </form>
+
+<div id="right-col"class="two-column">
+  <h3>Preview</h3>
+  <div id="preview-box" style="border-style: solid; border-color:
+    black;">
+    &nbsp;&nbsp;
+  </div>
+</div>
 
 
 

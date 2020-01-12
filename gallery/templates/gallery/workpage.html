@@ -1,5 +1,10 @@
 {% extends "common/base.html" %}
 
+{% block extracss %}
+<link href="/static/gallery/css/writing-display.css" type="text/css" rel="stylesheet"/>
+{% endblock %}
+
+
 {% block header %}
 <h1>{{ work.title }}</h1>
 <h2>part of gallery {{gallery.title}} by {{person.publicName}}</h2>
@@ -24,15 +29,23 @@
     <br><br>
     <div id="work-body">
       {% if documents %}
-	  {% for document in documents %}
-	     {% if document.filetype == "IMG" %}
+         {% for document in documents %}
+             {% if document.filetype == "IMG" %}
+               {% if gallery.theme == "comic" %}
+               {% if nextWork %}
+                 <a href="/{{person.publicName}}/{{gallery.urlname}}/{{nextWork.urlname}}">
+               {% endif %}
+               {% endif %}
                <img src="{{ document.docfile.url }}" width="100%" maxwidth="1024px">
+	       {% if gallery.theme == "comic" %}
+               {% if nextWork %}
+	         </a>
+               {% endif %}
+	       {% endif %}
              {% else %}
                <a href="{{ document.docfile.url }}">{{ document.docfile.url }}</a>
              {% endif %}
           {% endfor %}
-      {% else %}
-        <p>No documents.</p>
       {% endif %}
 
       <div class="work-body-text">
@@ -45,6 +58,19 @@
 
     </div>
 
+<div class="navigation">
+  {% if previousWork %}
+  <a href="/{{person.publicName}}/{{gallery.urlname}}/{{previousWork.urlname}}">Previous: {{ previousWork.title }}</a>
+<!-- easier to implement if we had a URL for getting a work by sequence num -->
+  {% endif %}
+&nbsp;&nbsp;
+<a href="/{{person.publicName}}/{{gallery.urlname}}">Back to gallery</a>
+&nbsp;&nbsp;
+  {% if nextWork %}
+  <a href="/{{person.publicName}}/{{gallery.urlname}}/{{nextWork.urlname}}">Next: {{ nextWork.title }}</a>
+  <!-- easier to implement if we had a URL for getting a work by sequence num -->
+  {% endif %}
+</div>
 {% endblock %}
 
 {% block sidebar %}

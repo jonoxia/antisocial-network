@@ -110,7 +110,8 @@ def person_page(request, personName):
         return render_to_response('gallery/404.html', {},
                         context_instance=RequestContext(request))
     person = matches[0]
-    galleries = Gallery.objects.filter(author = person)
+    galleries = Gallery.objects.filter(author = person,
+                                       publicity = "PUB")
 
     data = {"person": person, "galleries": galleries}
     if request.user == person.account:
@@ -135,9 +136,9 @@ def gallery_link_for_work(work, gallery_theme = None):
                               work.urlname)
     
     if work.workType == "PIC" and work.thumbnailUrl != "":
-        return '<li><a href="%s"><img src="%s"></a></li>' % (work_url, work.thumbnailUrl)
+        return '<li><a href="%s"><img src="%s"></a><p>%s</p></li>' % (work_url, work.thumbnailUrl, work.title)
     else:
-        return '<li><a href="%s">%s</a> (%s)</li>' % (work_url, work.title, work.workType)
+        return '<li><a href="%s">%s</a></li>' % (work_url, work.title)
 
 
 def gallery_page(request, personName, galleryUrlname):
@@ -162,8 +163,11 @@ def gallery_page(request, personName, galleryUrlname):
         if gallery.publicity == "PRI":
             return redirect("/%s" % (personName) )
 
-    works = Work.objects.filter(gallery = gallery)
-    data["works"] = [gallery_link_for_work(w) for w in works]
+    works = Work.objects.filter(gallery = gallery).order_by("sequenceNum")
+    if gallery.theme == "blog":
+        # for blog page only show writings
+        works = works.filter(workType = "WRI")
+    data["works"] = [gallery_link_for_work(w, gallery.theme) for w in works]
     data["othergalleries"] = Gallery.objects.filter(author = person)
     data["viewer"] = get_viewer(request)
     return render_to_response('gallery/gallerypage.html', data,
