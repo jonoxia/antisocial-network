@@ -1,7 +1,9 @@
 from django.conf.urls import patterns, include, url
 import views
+from gallery.feed import LatestEntriesFeed
 
 urlpatterns = patterns('',
+    url(r'^feed$', LatestEntriesFeed()),
     url(r'^preview$', views.preview_work),
     url(r'^(\w+)$', views.person_page),
     url(r'^(\w+)/edit$', views.edit_my_profile),
