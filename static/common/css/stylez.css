@@ -1,0 +1,14 @@
+div.two-column {
+    float: left;
+    width: 40%;
+    padding: 1em;
+}
+
+div.center-container {
+    text-align: center;
+}
+
+div.centered {
+    margin-left: auto;
+    margin-right: auto;
+}

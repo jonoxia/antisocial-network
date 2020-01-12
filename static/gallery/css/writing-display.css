@@ -1,0 +1,17 @@
+#work-body {
+  background-color: white;
+  color: black;
+  max-width: 40em;
+  border-color: black;
+  border-width: 2px;
+  border-style: solid;
+  font-size: 110%;
+  line-height: 150%;
+  font-family: helvetica;
+  margin: auto;
+  padding: 2em;
+}
+
+#work-body a {
+  color: blue;
+}
