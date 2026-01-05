@@ -2,6 +2,12 @@
 __pycache__/
 *.py[cod]
 
+# Emacs autosaves
+*.py~
+*.css~
+*.html~
+*.js~
+
 # C extensions
 *.so
 

@@ -392,6 +392,7 @@ def new_work(request, personName, galleryUrlname):
                                           workType = workType,
                                           body = body,
                                           modifyDate = datetime.datetime.now(),
+                                          publishDate = datetime.datetime.now(),
                                           thumbnailUrl = "",
                                           sequenceNum = seq_num)
             
@@ -470,6 +471,7 @@ def edit_work(request, personName, galleryUrlname, workUrlname):
             work.title = title
             work.body = body
             work.publicity = publicity
+            work.modifyDate = datetime.datetime.now()
             work.save()
 
             # TODO let me attach additional docs here if i want
@@ -483,8 +485,9 @@ def edit_work(request, personName, galleryUrlname, workUrlname):
         form = EditWorkForm(initial = {"title": work.title,
                                        "body": work.body,
                                        "publicity": work.publicity})
-        data = {"person": person, "gallery": gallery, "work": work, "form": form,
-                "errorMsg": ""}
+        document_form = DocumentForm()
+        data = {"person": person, "gallery": gallery, "work": work, "work_form": form,
+                "errorMsg": "", "document_form": document_form}
         return render_to_response('gallery/editwork.html', data,
                         context_instance=RequestContext(request))
 
@@ -529,3 +532,27 @@ def delete_work(request, personName, galleryUrlname, workUrlname):
 
     return redirect("/%s/%s" % (personName, galleryUrlname) )
 
+def insert_image_inline(request):
+    # processes form submitted by ajax
+    # file is in the field named "docfile"
+    matches = Human.objects.filter(account = request.user)
+    if len(matches) > 0:
+        author = matches[0]
+    
+    document_form = DocumentForm(request.POST, request.FILES)
+    if document_form.is_valid():
+        docfile = document_form.cleaned_data["docfile"]
+        filetype = document_form.cleaned_data["filetype"]
+        newdoc = Document.objects.create(docfile = docfile,
+                                         filetype = filetype,
+                                         owner = author)
+        compress_image(newdoc)
+        # newdoc.works.add(newwork) # add to dcurrent work? what does that do?
+        newdoc.save()
+
+        path = newdoc.docfile.path # I think?
+        url = path.replace("/home/jono/antisocial-network/", "/") # TODO dont' hardcode
+        return JsonResponse({"img_url": path})
+    # error message if document_form isn't valid:
+    return JsonResponse({"error_msg": "Document form not valid"})
+    

@@ -15,3 +15,7 @@
 #work-body a {
   color: blue;
 }
+
+#work-body img {
+  max-width: -moz-available;
+}

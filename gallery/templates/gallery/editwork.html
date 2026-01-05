@@ -12,10 +12,24 @@ Editing work {{ work.title }} in gallery {{ gallery.title }} for person {{ perso
 <p>{{ errorMsg }}</p>
 
 <form method="POST" action="">
-{% csrf_token %}
-{{ form.as_p }}
-<input type="submit" value="Save"/>
+  {% csrf_token %}
+  {{ work_form.non_field_errors }}
+  <table>
+    {{ work_form.as_table }}
+  </table>
+  <input type="submit" value="Save Changes"/>
 </form>
+
+<!-- document form will be treated as ajaxy form for adding image to blog post -->
+Insert Inline Image Into Post:
+<form method="POST" id="insert-image-form" action="/insert_image_inline" enctype="multipart/form-data">
+  {% csrf_token %}
+{{ document_form.non_field_errors }}
+<table>
+  {{ document_form.as_table}}
+</table>
+</form>
+<button id="insert-image">Insert</button>
 
 <div id="right-col"class="two-column">
   <h3>Preview</h3>

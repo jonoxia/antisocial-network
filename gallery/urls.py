@@ -5,6 +5,7 @@ from gallery.feed import LatestEntriesFeed
 urlpatterns = patterns('',
     url(r'^feed$', LatestEntriesFeed()),
     url(r'^preview$', views.preview_work),
+    url(r'^insert_image_inline$', views.insert_image_inline),
     url(r'^(\w+)$', views.person_page),
     url(r'^(\w+)/edit$', views.edit_my_profile),
     url(r'^(\w+)/newgallery$', views.new_gallery),
