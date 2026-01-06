@@ -16,7 +16,7 @@ DOC_TYPES = [("IMG", "Image"),
              ("MOV", "Movie")]
 
 class Human(models.Model):
-    account = models.ForeignKey(User, null=False)
+    account = models.ForeignKey(User, null=False, on_delete=models.CASCADE)
     pictureUrl = models.TextField()
     publicName = models.TextField()
     bio = models.TextField()
@@ -26,7 +26,7 @@ class Human(models.Model):
 # library i can include.
     
 class Gallery(models.Model):
-    author = models.ForeignKey(Human, null=False)
+    author = models.ForeignKey(Human, null=False, on_delete=models.CASCADE)
     urlname = models.TextField(null=False) # used when referring to gallery in part of url
     title = models.TextField()
     blurb = models.TextField()
@@ -39,7 +39,7 @@ class Gallery(models.Model):
 
     
 class Work(models.Model):
-    gallery = models.ForeignKey(Gallery, null=False)
+    gallery = models.ForeignKey(Gallery, null=False, on_delete=models.CASCADE)
     urlname = models.TextField(null=False) # used when referring to work in part of url
     thumbnailUrl = models.TextField()
     sequenceNum = models.IntegerField() # optional, used if gallery is ordered
@@ -72,7 +72,7 @@ class Document(models.Model):
     filetype = models.CharField(max_length=3,
                                 choices=DOC_TYPES,
                                 default="IMG")
-    owner = models.ForeignKey(Human, null=True) # TODO i want to make this false
+    owner = models.ForeignKey(Human, null=True, on_delete=models.CASCADE) # TODO i want to make this false
     works = models.ManyToManyField(Work, related_name="documents")
 
 
@@ -82,25 +82,25 @@ class Tag(models.Model):
 
 class Conversation(models.Model):
     title = models.TextField()
-    topic = models.ForeignKey(Work, null=True)
+    topic = models.ForeignKey(Work, null=True, on_delete=models.CASCADE)
     mode = models.TextField()
     startDate = models.DateTimeField()
 
 class Comment(models.Model):
-    person = models.ForeignKey(Human, null=False)
-    conversation = models.ForeignKey(Conversation, null=False)
+    person = models.ForeignKey(Human, null=False, on_delete=models.CASCADE)
+    conversation = models.ForeignKey(Conversation, null=False, on_delete=models.CASCADE)
     when = models.DateTimeField()
     commentText = models.TextField()
 
 class PublicitySetting(models.Model):
-    person = models.ForeignKey(Human, null=False)
-    conversation = models.ForeignKey(Conversation, null=False)
+    person = models.ForeignKey(Human, null=False, on_delete=models.CASCADE)
+    conversation = models.ForeignKey(Conversation, null=False, on_delete=models.CASCADE)
     setting = models.IntegerField() # 
 
 class GalleryCollab(models.Model):
     # For sharing ownership of a gallery, attach a few of these
-    person = models.ForeignKey(Human, null=False)
-    gallery = models.ForeignKey(Gallery, null=False)
+    person = models.ForeignKey(Human, null=False, on_delete=models.CASCADE)
+    gallery = models.ForeignKey(Gallery, null=False, on_delete=models.CASCADE)
     permissions = models.IntegerField() # what values could this have?
     publicity = models.CharField(max_length=3,
                                 choices=PRIVACY_SETTINGS,
