@@ -2,6 +2,8 @@ import os
 from pathlib import Path
 import dj_database_url
 
+BASE_DIR = os.path.dirname(os.path.dirname(__file__))
+
 ALLOWED_HOSTS = ['antisocial-network.herokuapp.com']
 DATABASES = {
     'default': dj_database_url.config(
