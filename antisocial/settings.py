@@ -3,7 +3,14 @@ from pathlib import Path
 import dj_database_url
 
 ALLOWED_HOSTS = ['antisocial-network.herokuapp.com']
-DATABASES = { 'default': dj_database_url.parse(os.environ.get('DATABASE_URL'))}
+DATABASES = {
+    'default': dj_database_url.config(
+        default='sqlite:///db.sqlite3',
+        conn_max_age=600
+    )
+}
+# dj_database_url.parse(os.environ.get('DATABASE_URL'))}
+
 STATIC_URL = '/static/'
 STATIC_ROOT = Path(BASE_DIR) / 'staticfiles'
 SECRET_KEY = os.environ.get('SECRET_KEY', 'your-default-secret-key')
