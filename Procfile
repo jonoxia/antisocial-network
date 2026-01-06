@@ -1,1 +1,1 @@
-web: gunicorn antisocial-network.wsgi
+web: gunicorn antisocial.wsgi
