@@ -1,9 +1,7 @@
 from django.shortcuts import render
 from django.http import HttpResponse
 from django.http import JsonResponse
-from django.shortcuts import render_to_response
 from django.shortcuts import redirect
-from django.template import RequestContext
 
 import markdown
 import datetime
@@ -107,8 +105,7 @@ def make_thumbnail(document):
 def person_page(request, personName):
     matches = Human.objects.filter(publicName = personName)
     if len(matches) == 0:
-        return render_to_response('gallery/404.html', {},
-                        context_instance=RequestContext(request))
+        return render(request, 'gallery/404.html', {})
     person = matches[0]
     galleries = Gallery.objects.filter(author = person,
                                        publicity = "PUB")
@@ -121,8 +118,7 @@ def person_page(request, personName):
     data["bio"] = markdown.markdown(person.bio)
 
     data["viewer"] = get_viewer(request)
-    return render_to_response('gallery/personpage.html', data,
-                    context_instance=RequestContext(request))
+    return render(request, 'gallery/personpage.html', data)
 
 
 def gallery_link_for_work(work, gallery_theme = None):
@@ -144,14 +140,14 @@ def gallery_link_for_work(work, gallery_theme = None):
 def gallery_page(request, personName, galleryUrlname):
     matches = Human.objects.filter(publicName = personName)
     if len(matches) == 0:
-        return render_to_response('gallery/404.html', {},
-                        context_instance=RequestContext(request))
+        return render(request, 'gallery/404.html', {})
+
     person = matches[0]
     matches = Gallery.objects.filter(urlname = galleryUrlname,
                                      author = person)
     if len(matches) == 0:
-        return render_to_response('gallery/404.html', {},
-                        context_instance=RequestContext(request))
+        return render(request, 'gallery/404.html', {})
+
     gallery = matches[0]
     data = {"person": person, "gallery": gallery}
     data["blurb"] = markdown.markdown(gallery.blurb)
@@ -170,8 +166,7 @@ def gallery_page(request, personName, galleryUrlname):
     data["works"] = [gallery_link_for_work(w, gallery.theme) for w in works]
     data["othergalleries"] = Gallery.objects.filter(author = person)
     data["viewer"] = get_viewer(request)
-    return render_to_response('gallery/gallerypage.html', data,
-                    context_instance=RequestContext(request))
+    return render(request, 'gallery/gallerypage.html', data)
 
 
 def work_page(request, personName, galleryUrlname, workUrlname):
@@ -179,8 +174,8 @@ def work_page(request, personName, galleryUrlname, workUrlname):
                                   gallery__urlname = galleryUrlname,
                                   gallery__author__publicName = personName)
     if len(matches) == 0:
-        return render_to_response('gallery/404.html', {},
-                                context_instance=RequestContext(request))
+        return render(request, 'gallery/404.html', {})
+
     work = matches[0]
 
     matches = Human.objects.filter(publicName = personName)
@@ -216,15 +211,14 @@ def work_page(request, personName, galleryUrlname, workUrlname):
             "nextWork": nextWork, "documents": documents}
     data["othergalleries"] = Gallery.objects.filter(author = person)
     data["viewer"] = get_viewer(request)
-    return render_to_response('gallery/workpage.html', data,
-                    context_instance=RequestContext(request))
+    return render(request, 'gallery/workpage.html', data)
 
 
 def edit_my_profile(request, personName):
     matches = Human.objects.filter(publicName = personName)
     if len(matches) == 0:
-        return render_to_response('gallery/404.html', {},
-                        context_instance=RequestContext(request))
+        return render(request, 'gallery/404.html', {})
+
     person = matches[0]
     if request.user != person.account:
         # Only I can edit my account:
@@ -254,16 +248,15 @@ def edit_my_profile(request, personName):
         document_form = DocumentForm()
     data = {"bio_form": bio_form, "document_form": document_form,
             "person": person}
-    return render_to_response('gallery/editprofile.html', data,
-                    context_instance=RequestContext(request))
+    return render(request, 'gallery/editprofile.html', data)
 
 
 def new_gallery(request, personName):
     errorMsg = ""
     matches = Human.objects.filter(publicName = personName)
     if len(matches) == 0:
-        return render_to_response('gallery/404.html', {},
-                        context_instance=RequestContext(request))
+        return render(request, 'gallery/404.html', {})
+
     person = matches[0]
     if request.user != person.account:
         # Only I can create new galleries under my name:
@@ -290,8 +283,7 @@ def new_gallery(request, personName):
     else:
         form = EditGalleryForm()
     data = {"person": person, "form": form, "errorMsg": errorMsg}
-    return render_to_response('gallery/newgallery.html', data,
-                    context_instance=RequestContext(request))
+    return render(request, 'gallery/newgallery.html', data)
 
 
 def edit_gallery(request, personName, galleryUrlname):
@@ -299,15 +291,15 @@ def edit_gallery(request, personName, galleryUrlname):
     # Look up the person:
     matches = Human.objects.filter(publicName = personName)
     if len(matches) == 0:
-        return render_to_response('gallery/404.html', {},
-                        context_instance=RequestContext(request))
+        return render(request, 'gallery/404.html', {})
+
     person = matches[0]
 
     # Look up the gallery
     matches = Gallery.objects.filter(urlname = galleryUrlname)
     if len(matches) == 0:
-        return render_to_response('gallery/404.html', {},
-                        context_instance=RequestContext(request))
+        return render(request, 'gallery/404.html', {})
+
     gallery = matches[0]
     
     if request.user != person.account:
@@ -341,15 +333,14 @@ def edit_gallery(request, personName, galleryUrlname):
                                       "publicity": gallery.publicity})
 
     data = {"person": person, "form": form, "errorMsg": errorMsg}
-    return render_to_response('gallery/editgallery.html', data,
-                    context_instance=RequestContext(request))
+    return render(request, 'gallery/editgallery.html', data)
 
 
 def new_work(request, personName, galleryUrlname):
     matches = Human.objects.filter(publicName = personName)
     if len(matches) == 0:
-        return render_to_response('gallery/404.html', {},
-            context_instance=RequestContext(request))
+        return render(request, 'gallery/404.html', {})
+
     person = matches[0]
 
     if request.user != person.account:
@@ -359,8 +350,8 @@ def new_work(request, personName, galleryUrlname):
     # TODO use get_object_or_404?
     matches = Gallery.objects.filter(urlname = galleryUrlname)
     if len(matches) == 0:
-        return render_to_response('gallery/404.html', {},
-                                context_instance=RequestContext(request))
+        return render(request, 'gallery/404.html', {})
+
     gallery = matches[0]
 
     if request.method == "POST":
@@ -432,8 +423,7 @@ def new_work(request, personName, galleryUrlname):
         document_form = DocumentForm()
     data = {"person": person, "gallery": gallery, "errorMsg": "", 
             "work_form": work_form, "document_form": document_form}
-    return render_to_response('gallery/newwork.html', data,
-                        context_instance=RequestContext(request))
+    return render(request, 'gallery/newwork.html', data)
 
 
 def edit_work(request, personName, galleryUrlname, workUrlname):
@@ -442,15 +432,15 @@ def edit_work(request, personName, galleryUrlname, workUrlname):
     # Look up the person:
     matches = Human.objects.filter(publicName = personName)
     if len(matches) == 0:
-        return render_to_response('gallery/404.html', {},
-                        context_instance=RequestContext(request))
+        return render(request, 'gallery/404.html', {})
+
     person = matches[0]
 
     # Look up the gallery
     matches = Gallery.objects.filter(urlname = galleryUrlname)
     if len(matches) == 0:
-        return render_to_response('gallery/404.html', {},
-                        context_instance=RequestContext(request))
+        return render(request, 'gallery/404.html', {})
+
     gallery = matches[0]
     
     if request.user != person.account:
@@ -488,8 +478,7 @@ def edit_work(request, personName, galleryUrlname, workUrlname):
         document_form = DocumentForm()
         data = {"person": person, "gallery": gallery, "work": work, "work_form": form,
                 "errorMsg": "", "document_form": document_form}
-        return render_to_response('gallery/editwork.html', data,
-                        context_instance=RequestContext(request))
+        return render(request, 'gallery/editwork.html', data)
 
 
 def preview_work(request):
@@ -506,15 +495,15 @@ def delete_work(request, personName, galleryUrlname, workUrlname):
     # Look up the person:
     matches = Human.objects.filter(publicName = personName)
     if len(matches) == 0:
-        return render_to_response('gallery/404.html', {},
-                        context_instance=RequestContext(request))
+        return render(request, 'gallery/404.html', {})
+
     person = matches[0]
 
     # Look up the gallery
     matches = Gallery.objects.filter(urlname = galleryUrlname)
     if len(matches) == 0:
-        return render_to_response('gallery/404.html', {},
-                        context_instance=RequestContext(request))
+        return render(request, 'gallery/404.html', {})
+
     gallery = matches[0]
     
     if request.user != person.account:

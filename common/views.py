@@ -1,7 +1,5 @@
 from django.shortcuts import render
 from django.shortcuts import redirect
-from django.shortcuts import render_to_response
-from django.template import RequestContext
 from django.contrib.auth import logout
 from django.contrib.auth import authenticate
 from django.contrib.auth import login
@@ -21,8 +19,7 @@ def logout_view(request):
     return redirect("/")
 
 def index_page(request):
-    return render_to_response('common/index.html', {},
-        context_instance=RequestContext(request))
+    return render(request, 'common/index.html', {})
 
 def create_account(request):
     errorMsg = ""
@@ -53,6 +50,5 @@ def create_account(request):
         form = CreateAccountForm()
 
     data = {"form": form, "errorMsg": errorMsg}
-    return render_to_response('common/signup.html', data,
-                context_instance=RequestContext(request))
+    return render(request, 'common/signup.html', data)
 
