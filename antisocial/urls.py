@@ -24,6 +24,6 @@ urlpatterns = [
     path('accounts/create',
         views.create_account, name="create_account"),
 
-    path('admin/', include(admin.site.urls)),
-    path('', include('gallery.urls')),
+    path('admin/', admin.site.urls),
+    path('', 'gallery.urls'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
