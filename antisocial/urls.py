@@ -5,7 +5,7 @@ from django.conf.urls.static import static
 
 from common import views
 
-urlpatterns = patterns('',
+urlpatterns = [
     # Examples:
     # url(r'^$', 'antisocial.views.home', name='home'),
     path('accounts/login/',
@@ -22,6 +22,4 @@ urlpatterns = patterns('',
 
     path('admin/', include(admin.site.urls)),
     path('', include('gallery.urls')),
-) + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-
-
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

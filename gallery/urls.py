@@ -2,7 +2,7 @@ from django.urls import path, re_path
 import views
 from gallery.feed import LatestEntriesFeed
 
-urlpatterns = patterns('',
+urlpatterns = [
     path('feed', LatestEntriesFeed()),
     path('preview', views.preview_work),
     path('insert_image_inline', views.insert_image_inline),
@@ -15,7 +15,7 @@ urlpatterns = patterns('',
     re_path('(\w+)/([\w\-_]+)/([\w\-_]+)', views.work_page),
     re_path('(\w+)/([\w\-_]+)/([\w\-_]+)/edit', views.edit_work),
     re_path('(\w+)/([\w\-_]+)/([\w\-_]+)/delete', views.delete_work),
-)
+]
 
 # Don't allow the user to give a name to a work or gallery that conflicts with
 # functional URLs, i.e. i can't make a gallery named newgallery.
