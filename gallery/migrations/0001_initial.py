@@ -55,7 +55,7 @@ class Migration(migrations.Migration):
                 ('pictureUrl', models.TextField()),
                 ('publicName', models.TextField()),
                 ('bio', models.TextField()),
-                ('account', models.ForeignKey(to=settings.AUTH_USER_MODEL)),
+                ('account', models.ForeignKey(to=settings.AUTH_USER_MODEL, on_delete=models.CASCADE)),
             ],
             options={
             },
@@ -66,8 +66,8 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('setting', models.IntegerField()),
-                ('conversation', models.ForeignKey(to='gallery.Conversation')),
-                ('person', models.ForeignKey(to='gallery.Human')),
+                ('conversation', models.ForeignKey(to='gallery.Conversation', on_delete=models.CASCADE )),
+                ('person', models.ForeignKey(to='gallery.Human', on_delete=models.CASCADE)),
             ],
             options={
             },
@@ -96,7 +96,7 @@ class Migration(migrations.Migration):
                 ('publishDate', models.DateTimeField()),
                 ('modifyDate', models.DateTimeField()),
                 ('publicity', models.IntegerField()),
-                ('gallery', models.ForeignKey(to='gallery.Gallery')),
+                ('gallery', models.ForeignKey(to='gallery.Gallery', on_delete=models.CASCADE)),
             ],
             options={
             },
@@ -111,25 +111,25 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='gallery',
             name='author',
-            field=models.ForeignKey(to='gallery.Human'),
+            field=models.ForeignKey(to='gallery.Human', on_delete=models.CASCADE),
             preserve_default=True,
         ),
         migrations.AddField(
             model_name='conversation',
             name='topic',
-            field=models.ForeignKey(to='gallery.Work', null=True),
+            field=models.ForeignKey(to='gallery.Work', null=True, on_delete=models.CASCADE),
             preserve_default=True,
         ),
         migrations.AddField(
             model_name='comment',
             name='conversation',
-            field=models.ForeignKey(to='gallery.Conversation'),
+            field=models.ForeignKey(to='gallery.Conversation', on_delete=models.CASCADE),
             preserve_default=True,
         ),
         migrations.AddField(
             model_name='comment',
             name='person',
-            field=models.ForeignKey(to='gallery.Human'),
+            field=models.ForeignKey(to='gallery.Human', on_delete=models.CASCADE),
             preserve_default=True,
         ),
     ]

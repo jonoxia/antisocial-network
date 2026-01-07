@@ -1,5 +1,5 @@
 from django.urls import path, re_path
-import views
+from . import views
 from gallery.feed import LatestEntriesFeed
 
 urlpatterns = [

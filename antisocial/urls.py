@@ -1,4 +1,4 @@
-from django.urls import path, re_path
+from django.urls import path, re_path, include
 from django.contrib import admin
 from django.conf import settings
 from django.conf.urls.static import static
@@ -19,11 +19,11 @@ urlpatterns = [
     # path('accounts/logout/', LogoutView.as_view(), name='logout'),
     # path('accounts/password_reset/', PasswordResetView.as_view(), name='password_reset'),
 
-    path('$', views.index_page, name="common_index_page"),
+    path('', views.index_page, name="common_index_page"),
 
     path('accounts/create',
         views.create_account, name="create_account"),
 
     path('admin/', admin.site.urls),
-    path('', 'gallery.urls'),
+    path('', include('gallery.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

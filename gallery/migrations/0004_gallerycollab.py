@@ -17,8 +17,8 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('permissions', models.IntegerField()),
                 ('publicity', models.CharField(default=b'PRI', max_length=3, choices=[(b'PRI', b'Private'), (b'FRO', b'Friends-Only'), (b'PUB', b'Public')])),
-                ('gallery', models.ForeignKey(to='gallery.Gallery')),
-                ('person', models.ForeignKey(to='gallery.Human')),
+                ('gallery', models.ForeignKey(to='gallery.Gallery', on_delete=models.CASCADE)),
+                ('person', models.ForeignKey(to='gallery.Human', on_delete=models.CASCADE)),
             ],
             options={
             },
