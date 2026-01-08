@@ -4,7 +4,7 @@ import dj_database_url
 
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
-ALLOWED_HOSTS = ['antisocial-network.herokuapp.com']
+ALLOWED_HOSTS = ['*'] #'antisocial-network.herokuapp.com']
 DATABASES = {
     'default': dj_database_url.config(
         default='sqlite:///db.sqlite3',
@@ -16,7 +16,7 @@ DATABASES = {
 STATIC_URL = '/static/'
 STATIC_ROOT = Path(BASE_DIR) / 'staticfiles'
 SECRET_KEY = os.environ.get('SECRET_KEY', 'your-default-secret-key')
-DEBUG = os.environ.get('DEBUG', 'False') == 'True'
+DEBUG = True #os.environ.get('DEBUG', 'False') == 'True'
 
 INSTALLED_APPS = (
     'django.contrib.admin',

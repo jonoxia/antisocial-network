@@ -5,7 +5,7 @@
 <div id="left-column">
 <div class="boxed">
   <h3>Log In:</h3>
-  <form method="post" action="{% url 'django.contrib.auth.views.login' %}">
+  <form method="post" action="{% url 'login' %}">
   {% csrf_token %}
   <table>
     <tr>
