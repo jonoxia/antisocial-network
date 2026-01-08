@@ -8,7 +8,7 @@ ALLOWED_HOSTS = ['*'] #'antisocial-network.herokuapp.com']
 
 DATABASES = {
     'default': dj_database_url.config(
-        dj_database_url.parse(os.environ.get('DATABASE_URL')
+        dj_database_url.parse(os.environ.get('DATABASE_URL'))
     )
 }
     
