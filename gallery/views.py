@@ -28,7 +28,7 @@ def make_url_name(title, existing_names):
     # monocase:
     urlname = urlname.lower()
     # break it up at whitespace
-    whitespace = re.compile("\s")
+    whitespace = re.compile(r'\s')
     pieces = whitespace.split(urlname)
 
     # strip all other non-word characters:
