@@ -5,16 +5,22 @@ import dj_database_url
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
 ALLOWED_HOSTS = ['*'] #'antisocial-network.herokuapp.com']
+
 DATABASES = {
     'default': dj_database_url.config(
-        default='sqlite:///db.sqlite3',
-        conn_max_age=600
+        dj_database_url.parse(os.environ.get('DATABASE_URL')
     )
 }
-# dj_database_url.parse(os.environ.get('DATABASE_URL'))}
+    
+#    default='sqlite:///db.sqlite3',
+#    conn_max_age=600
+#)
+#}
+# 
 
 STATIC_URL = '/static/'
 STATIC_ROOT = Path(BASE_DIR) / 'staticfiles'
+#STATIC_FILES_DIRS = 
 SECRET_KEY = os.environ.get('SECRET_KEY', 'your-default-secret-key')
 DEBUG = True #os.environ.get('DEBUG', 'False') == 'True'
 
