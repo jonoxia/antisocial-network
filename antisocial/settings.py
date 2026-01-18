@@ -16,11 +16,8 @@ DATABASES = {
 #}
 # 
 
-STATIC_URL = '/static/'
-STATIC_ROOT = Path(BASE_DIR) / 'staticfiles'
-#STATIC_FILES_DIRS = 
 SECRET_KEY = os.environ.get('SECRET_KEY', 'your-default-secret-key')
-DEBUG = True #os.environ.get('DEBUG', 'False') == 'True'
+DEBUG = False #True #os.environ.get('DEBUG', 'False') == 'True'
 
 INSTALLED_APPS = (
     'django.contrib.admin',
@@ -29,8 +26,9 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'storages'
     'common',
-    'gallery'
+    'gallery',
 )
 
 TEMPLATES = [
@@ -52,6 +50,8 @@ TEMPLATES = [
 ]
 
 MIDDLEWARE = (
+    'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -64,9 +64,14 @@ MIDDLEWARE = (
 ROOT_URLCONF = 'antisocial.urls'
 
 STATIC_URL = '/static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+STATIC_ROOT = Path(BASE_DIR) / 'staticfiles' # was 'static'
 
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'
+MEDIA_ROOT = Path(BASE_DIR) / 'collected-media' # was 'media'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+#STATIC_FILES_DIRS =
+
+
+# optional
+# STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
