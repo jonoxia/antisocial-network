@@ -58,7 +58,7 @@ def make_url_name(title, existing_names):
     return urlname
 
 def get_viewer(request):
-    if request.user.is_authenticated():
+    if request.user.is_authenticated:
         return Human.objects.get(account = request.user)
     else:
         return None
