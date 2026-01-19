@@ -14,7 +14,7 @@ class Command(BaseCommand):
         need_bio_img_replacement = Human.objects.filter(portrait__isnull=True)
         for person in need_bio_img_replacement.all():
             if person.pictureUrl is not None:
-                self.stdout.write('Person ${name} needs bio img replacement for url ${url}'.format({"name": person.name, "url": person.pictureUrl}))
+                self.stdout.write('Person ${name} needs bio img replacement for url ${url}'.format({"name": person.publicName, "url": person.pictureUrl}))
 
                 # Look up whether there's already a Document?
                 corrected_url = person.pictureUrl.replace("/media", "")
