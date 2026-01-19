@@ -19,8 +19,8 @@ class Command(BaseCommand):
                 # Look up whether there's already a Document?
                 corrected_url = person.pictureUrl.replace("/media", "")
                 doc_match = Document.objects.filter(
-                    docfile == corrected_url,
-                    owner == person
+                    docfile = corrected_url,
+                    owner = person
                     )
                 if doc_match.count() > 0:
                     person.portrait = doc_match[0]
