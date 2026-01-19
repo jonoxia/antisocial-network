@@ -25,10 +25,12 @@ class Command(BaseCommand):
                 if doc_match.count() > 0:
                     person.portrait = doc_match[0]
                 else:
-                    person.portrait = Document(
+                    new_portrait = Document(
                         docfile = corrected_url,
                         owner = person
                     )
+                    new_portrait.save()
+                    person.portrait = new_portrait
                 person.save()
         
         self.stdout.write(self.style.SUCCESS('Command executed successfully'))
