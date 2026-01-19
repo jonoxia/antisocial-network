@@ -20,6 +20,7 @@ class Human(models.Model):
     pictureUrl = models.TextField()
     publicName = models.TextField()
     bio = models.TextField()
+    portrait = models.ForeignKey('Document', null=True, on_delete=models.CASCADE)
 
 # i'm probably gonna want most of the user-editable fields to be parsed as markdown
 # and auto-escape any html tags you try to put in. See if there's a markdown parsing
