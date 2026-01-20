@@ -2,6 +2,7 @@ from django.shortcuts import render
 from django.http import HttpResponse
 from django.http import JsonResponse
 from django.shortcuts import redirect
+from django.conf import settings
 
 import markdown
 import datetime
