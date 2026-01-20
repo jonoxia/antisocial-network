@@ -192,7 +192,7 @@ def work_page(request, personName, galleryUrlname, workUrlname):
         placeholder_text = f"{{{{ {document.id} }}}}"
         if placeholder_text in body:
             tag_text = f"<img src=\"{document.docfile.url}\">"
-            text = text.replace(placeholder_text, tag_text)
+            body = body.replace(placeholder_text, tag_text)
         else:
             unreferenced_documents.append(document)
 
