@@ -131,11 +131,17 @@ def gallery_link_for_work(work, gallery_theme = None):
                               work.gallery.urlname,
                               work.urlname)
 
-    # XXX correct this - replace work.thumbnailUrl with work.thumbnail.url
-    # or maybe we could just take work.thumbnailUrl and replace /media/ with
-    # the S3 base URL.
+    # Correcting thumbnail URLs: This is just a replacement of the /media 
+    # with the S3 bucket URL. not sure this is gonna even work actually.
+    # Everywhere else we created a Document and then used document.docfile.url
+    # maybe we should do that here too
     if work.workType == "PIC" and work.thumbnailUrl != "":
-        return '<li><a href="%s"><img src="%s"></a><p>%s</p></li>' % (work_url, work.thumbnailUrl, work.title)
+        bucket = settings.AWS_STORAGE_BUCKET_NAME
+        region = settings.AWS_S3_REGION_NAME
+        corrected_url = work.thumbnailUrl.replace("/media", "")
+        s3_url = f"https://{bucket}.s3.{region}.amazonaws.com/{corrected_url}"
+    
+        return '<li><a href="%s"><img src="%s"></a><p>%s</p></li>' % (work_url, s3_url, work.title)
     else:
         return '<li><a href="%s">%s</a></li>' % (work_url, work.title)
 
