@@ -172,8 +172,7 @@ def gallery_page(request, personName, galleryUrlname):
     return render(request, 'gallery/gallerypage.html', data)
 
 def process_inline_imgs(work, text):
-    docs = Document.objects.filter( works__contains = work ).all()
-    for document in docs:
+    for document in work.documents.all():
         placeholder_text = f"{{{{ {document.id} }}}}"
         tag_text = f"<img src=\"{document.docfile.url}\">"
         text = text.replace(placeholder_text, tag_text)
