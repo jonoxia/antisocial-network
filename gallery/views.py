@@ -171,13 +171,6 @@ def gallery_page(request, personName, galleryUrlname):
     data["viewer"] = get_viewer(request)
     return render(request, 'gallery/gallerypage.html', data)
 
-def process_inline_imgs(work, text):
-    for document in work.documents.all():
-        placeholder_text = f"{{{{ {document.id} }}}}"
-        tag_text = f"<img src=\"{document.docfile.url}\">"
-        text = text.replace(placeholder_text, tag_text)
-    return text
-
 
 def work_page(request, personName, galleryUrlname, workUrlname):
     matches = Work.objects.filter(urlname = workUrlname,
@@ -193,7 +186,15 @@ def work_page(request, personName, galleryUrlname, workUrlname):
     mine = (request.user == person.account)
 
     body = markdown.markdown(work.body) # parse markdown for display
-    body = process_inline_imgs(work, body) # Turn img placeholders into img tags
+    unreferenced_documents = []
+    for document in work.documents.all():
+        # Turn placeholders into image tags.
+        placeholder_text = f"{{{{ {document.id} }}}}"
+        if placeholder_text in body:
+            tag_text = f"<img src=\"{document.docfile.url}\">"
+            text = text.replace(placeholder_text, tag_text)
+        else:
+            unreferenced_documents.append(document)
 
     # Get the previous and next works, if any, so that we can put the links
     # at the bottom of the page. Ultimately different galleries will have different
@@ -219,7 +220,7 @@ def work_page(request, personName, galleryUrlname, workUrlname):
     documents = work.documents.all()
     data = {"person": person, "gallery": work.gallery, "work": work,
             "mine": mine, "body": body, "previousWork": previousWork,
-            "nextWork": nextWork, "documents": documents}
+            "nextWork": nextWork, "documents": unreferenced_documents}
     data["othergalleries"] = Gallery.objects.filter(author = person)
     data["viewer"] = get_viewer(request)
     return render(request, 'gallery/workpage.html', data)
