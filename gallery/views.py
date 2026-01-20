@@ -130,7 +130,10 @@ def gallery_link_for_work(work, gallery_theme = None):
     work_url = "/%s/%s/%s" % (work.gallery.author.publicName,
                               work.gallery.urlname,
                               work.urlname)
-    
+
+    # XXX correct this - replace work.thumbnailUrl with work.thumbnail.url
+    # or maybe we could just take work.thumbnailUrl and replace /media/ with
+    # the S3 base URL.
     if work.workType == "PIC" and work.thumbnailUrl != "":
         return '<li><a href="%s"><img src="%s"></a><p>%s</p></li>' % (work_url, work.thumbnailUrl, work.title)
     else:
@@ -168,6 +171,14 @@ def gallery_page(request, personName, galleryUrlname):
     data["viewer"] = get_viewer(request)
     return render(request, 'gallery/gallerypage.html', data)
 
+def process_inline_imgs(work, text):
+    docs = Document.objects.filter( works__contains = work ).all()
+    for document in docs:
+        placeholder_text = f"{{{{ {document.id} }}}}"
+        tag_text = f"<img src=\"{document.docfile.url}\">"
+        text = text.replace(placeholder_text, tag_text)
+    return text
+
 
 def work_page(request, personName, galleryUrlname, workUrlname):
     matches = Work.objects.filter(urlname = workUrlname,
@@ -183,6 +194,7 @@ def work_page(request, personName, galleryUrlname, workUrlname):
     mine = (request.user == person.account)
 
     body = markdown.markdown(work.body) # parse markdown for display
+    body = process_inline_imgs(work, body) # Turn img placeholders into img tags
 
     # Get the previous and next works, if any, so that we can put the links
     # at the bottom of the page. Ultimately different galleries will have different
@@ -527,6 +539,9 @@ def insert_image_inline(request):
     matches = Human.objects.filter(account = request.user)
     if len(matches) > 0:
         author = matches[0]
+
+    # TODO instead of this, insert a placeholder with the document ID, and
+    # link the document!
     
     document_form = DocumentForm(request.POST, request.FILES)
     if document_form.is_valid():

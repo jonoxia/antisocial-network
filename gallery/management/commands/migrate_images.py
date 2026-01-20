@@ -1,5 +1,6 @@
 from django.core.management.base import BaseCommand
-from gallery.models import Human, Document
+from gallery.models import Human, Document, Work
+import re
 
 class Command(BaseCommand):
     help = 'Migrates images from Work body to Document model'
@@ -10,7 +11,10 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         # Your command logic here
+        self.replace_inline_imgs()
+        self.stdout.write(self.style.SUCCESS('Command executed successfully'))
 
+    def replace_profile_pics(self):
         need_bio_img_replacement = Human.objects.filter(portrait__isnull=True)
         for person in need_bio_img_replacement.all():
             if person.pictureUrl is not None:
@@ -32,5 +36,39 @@ class Command(BaseCommand):
                     new_portrait.save()
                     person.portrait = new_portrait
                 person.save()
+
+    def replace_thumbnails(self):
+        pass
+
+    def replace_inline_imgs(self):
+        pattern = r'<img\s+[^>]*src=["\'](.*?)["\']'
+        matches = Work.objects.filter(body__contains = "<img src").all()
         
-        self.stdout.write(self.style.SUCCESS('Command executed successfully'))
+        for work in matches:
+
+            text = work.body
+            # replace any pictures in body
+            img_urls = re.findall(pattern, text)
+
+            for img_url in img_urls:
+                tag_text = f"<img src=\"{img_url}\">"
+                corrected_url = img_url.replace("/media", "")
+                document, created = Document.objects.get_or_create(
+                    docfile = corrected_url,
+                    owner = work.gallery.author
+                )
+                if not document.works.contains(work):
+                    document.works.add(work)
+                document.save()
+
+                placeholder_text = f"{{{{ {document.id} }}}}"
+
+                text = text.replace(tag_text, placeholder_text)
+            work.body = text
+            work.save()
+        # Now, when rendering a work, replace {{ number }} with
+        # <img src="{{ document.docfile.url }}">
+
+        # And then there's thumbnails...
+
+
