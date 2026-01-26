@@ -132,17 +132,16 @@ def gallery_link_for_work(work, gallery_theme = None):
                               work.gallery.urlname,
                               work.urlname)
 
-    # Correcting thumbnail URLs: This is just a replacement of the /media 
-    # with the S3 bucket URL. not sure this is gonna even work actually.
-    # Everywhere else we created a Document and then used document.docfile.url
-    # maybe we should do that here too
+    # Correcting thumbnail URLs: TODO this does NOT work because creating the URL
+    # this way doesn't include the crypto signature stuff. Must turn these into
+    # Documents and use document.docfile.url.
+    # Step 1: Migration to add thumbnail foreign key to document.
+    #   1a apply migration
+    # Step 2: modify my correction script to do the same thing for work.thumbnailUrl that it did
+    # for person.portraitUrl
     if work.workType == "PIC" and work.thumbnailUrl != "":
-        bucket = settings.AWS_STORAGE_BUCKET_NAME
-        region = settings.AWS_S3_REGION_NAME
-        corrected_url = work.thumbnailUrl.replace("/media", "")
-        s3_url = f"https://{bucket}.s3.{region}.amazonaws.com/{corrected_url}"
-    
-        return '<li><a href="%s"><img src="%s"></a><p>%s</p></li>' % (work_url, s3_url, work.title)
+
+        return '<li><a href="%s"><img src="%s"></a><p>%s</p></li>' % (work_url, work.thumbnailUrl, work.title)
     else:
         return '<li><a href="%s">%s</a></li>' % (work_url, work.title)
 
