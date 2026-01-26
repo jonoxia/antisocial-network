@@ -132,13 +132,7 @@ def gallery_link_for_work(work, gallery_theme = None):
                               work.gallery.urlname,
                               work.urlname)
 
-    # Correcting thumbnail URLs: TODO this does NOT work because creating the URL
-    # this way doesn't include the crypto signature stuff. Must turn these into
-    # Documents and use document.docfile.url.
-    # Step 1: Migration to add thumbnail foreign key to document.
-    #   1a apply migration
-    # Step 2: modify my correction script to do the same thing for work.thumbnailUrl that it did
-    # for person.portraitUrl
+    # Thumbnail URL if available:
     if work.workType == "PIC" and work.thumbnail is not None:
         thumbnailUrl = work.thumbnail.docfile.url
         return '<li><a href="%s"><img src="%s"></a><p>%s</p></li>' % (work_url, thumbnailUrl, work.title)
@@ -566,3 +560,7 @@ def insert_image_inline(request):
     # error message if document_form isn't valid:
     return JsonResponse({"error_msg": "Document form not valid"})
     
+def list_unused_docs(request):
+    unused_docs = Document.objects.all() # TODO filter to ones not referenced by works
+    
+    return render(request, 'gallery/img_catalog.html', {"documents": unused_docs})
