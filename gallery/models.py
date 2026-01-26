@@ -17,7 +17,6 @@ DOC_TYPES = [("IMG", "Image"),
 
 class Human(models.Model):
     account = models.ForeignKey(User, null=False, on_delete=models.CASCADE)
-    pictureUrl = models.TextField() # DEPRECATED, remove
     publicName = models.TextField()
     bio = models.TextField()
     portrait = models.ForeignKey('Document', null=True, on_delete=models.CASCADE)
@@ -42,7 +41,6 @@ class Gallery(models.Model):
 class Work(models.Model):
     gallery = models.ForeignKey(Gallery, null=False, on_delete=models.CASCADE)
     urlname = models.TextField(null=False) # used when referring to work in part of url
-    thumbnailUrl = models.TextField() # TODO replace with Document link for thumbnail.
     thumbnail = models.ForeignKey('Document', null=True, on_delete=models.CASCADE) # TODO different on_delete?
     sequenceNum = models.IntegerField() # optional, used if gallery is ordered
     title = models.TextField(default="") # optional, i.e. picture posts don't have it
