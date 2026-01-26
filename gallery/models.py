@@ -74,6 +74,7 @@ class Document(models.Model):
                                 default="IMG")
     owner = models.ForeignKey(Human, null=True, on_delete=models.CASCADE) # TODO i want to make this false
     works = models.ManyToManyField(Work, related_name="documents")
+    # add an uploaded-at date to sort by
 
 
 class Tag(models.Model):

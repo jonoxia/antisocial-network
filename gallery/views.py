@@ -562,9 +562,12 @@ def insert_image_inline(request):
     
 def list_unused_docs(request):
     # FieldFile object is not subscriptable...
-    unused_docs = Document.objects.exclude(docfile__isnull = True).filter(filetype = 'IMG')
+    unused_docs = Document.objects.exclude(docfile__isnull = True).filter(filetype = 'IMG')\
+                                                                  .order_by()
     # TODO filter to ones not referenced by works
 
-    doc_urls = [ doc.docfile.url for doc in unused_docs ]
+    doc_urls = [ doc.docfile.url for doc in unused_docs if doc.docfile is not None and doc.docfile.name != '']
+    # There's at least one Document that doesn't have a valid file... it has a .docfile object but
+    # trying to access .docfile.url breaks
     
     return render(request, 'gallery/img_catalog.html', {"documents": doc_urls})
