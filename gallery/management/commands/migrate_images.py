@@ -11,7 +11,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         # Your command logic here
-        self.replace_thumbnaisl()
+        self.replace_thumbnails()
         self.stdout.write(self.style.SUCCESS('Command executed successfully'))
 
     def replace_profile_pics(self):
