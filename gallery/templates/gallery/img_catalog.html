@@ -4,9 +4,9 @@
 {% block content %}
 
 {% for doc in documents %}
-  {% if doc.filetype == 'IMG' %}
+
   <p><img src="{{doc.docfile.url}}"></p>
-  {% endif %}
+
 
 {% endfor %}
 

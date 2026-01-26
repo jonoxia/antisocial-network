@@ -561,6 +561,7 @@ def insert_image_inline(request):
     return JsonResponse({"error_msg": "Document form not valid"})
     
 def list_unused_docs(request):
-    unused_docs = Document.objects.all() # TODO filter to ones not referenced by works
+    unused_docs = Document.objects.exclude(docfile__isnull = True).filter(filetype = 'IMG')
+    # TODO filter to ones not referenced by works
     
     return render(request, 'gallery/img_catalog.html', {"documents": unused_docs})
