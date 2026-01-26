@@ -39,22 +39,22 @@ class Command(BaseCommand):
 
     def replace_thumbnails(self):
         need_thumbnail_replacement = Work.objects.filter(thumbnail__isnull=True)
-        for person in need_thumbnail_replacement.all():
-            if person.pictureUrl is not None:
+        for work in need_thumbnail_replacement.all():
+            if work.thumbnailUrl is not None:
                 self.stdout.write('Work {} needs thumbnail replacement for url {}'.format(work.title, work.thumbnailUrl))
 
                 # Look up whether there's already a Document?
                 corrected_url = work.thumbnailUrl.replace("/media", "")
                 doc_match = Document.objects.filter(
                     docfile = corrected_url,
-                    owner = person
+                    owner = work.gallery.author
                     )
                 if doc_match.count() > 0:
                     work.thumbnail = doc_match[0]
                 else:
                     new_portrait = Document(
                         docfile = corrected_url,
-                        owner = person
+                        owner = work.gallery.author
                     )
                     new_portrait.save()
                     work.thumbnail = new_portrait
