@@ -139,9 +139,9 @@ def gallery_link_for_work(work, gallery_theme = None):
     #   1a apply migration
     # Step 2: modify my correction script to do the same thing for work.thumbnailUrl that it did
     # for person.portraitUrl
-    if work.workType == "PIC" and work.thumbnailUrl != "":
-
-        return '<li><a href="%s"><img src="%s"></a><p>%s</p></li>' % (work_url, work.thumbnailUrl, work.title)
+    if work.workType == "PIC" and work.thumbnail is not None:
+        thumbnailUrl = work.thumbnail.docfile.url
+        return '<li><a href="%s"><img src="%s"></a><p>%s</p></li>' % (work_url, thumbnailUrl, work.title)
     else:
         return '<li><a href="%s">%s</a></li>' % (work_url, work.title)
 
