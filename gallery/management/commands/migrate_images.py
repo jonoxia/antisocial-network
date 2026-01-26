@@ -11,7 +11,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         # Your command logic here
-        self.replace_inline_imgs()
+        self.replace_thumbnaisl()
         self.stdout.write(self.style.SUCCESS('Command executed successfully'))
 
     def replace_profile_pics(self):
@@ -38,7 +38,27 @@ class Command(BaseCommand):
                 person.save()
 
     def replace_thumbnails(self):
-        pass
+        need_thumbnail_replacement = Work.objects.filter(thumbnail__isnull=True)
+        for person in need_thumbnail_replacement.all():
+            if person.pictureUrl is not None:
+                self.stdout.write('Work {} needs thumbnail replacement for url {}'.format(work.title, work.thumbnailUrl))
+
+                # Look up whether there's already a Document?
+                corrected_url = work.thumbnailUrl.replace("/media", "")
+                doc_match = Document.objects.filter(
+                    docfile = corrected_url,
+                    owner = person
+                    )
+                if doc_match.count() > 0:
+                    work.thumbnail = doc_match[0]
+                else:
+                    new_portrait = Document(
+                        docfile = corrected_url,
+                        owner = person
+                    )
+                    new_portrait.save()
+                    work.thumbnail = new_portrait
+                work.save()
 
     def replace_inline_imgs(self):
         pattern = r'<img\s+[^>]*src=["\'](.*?)["\']'
