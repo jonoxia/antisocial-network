@@ -561,7 +561,10 @@ def insert_image_inline(request):
     return JsonResponse({"error_msg": "Document form not valid"})
     
 def list_unused_docs(request):
+    # FieldFile object is not subscriptable...
     unused_docs = Document.objects.exclude(docfile__isnull = True).filter(filetype = 'IMG')
     # TODO filter to ones not referenced by works
+
+    doc_urls = [ doc.docfile.url for doc in unused_docs ]
     
-    return render(request, 'gallery/img_catalog.html', {"documents": unused_docs})
+    return render(request, 'gallery/img_catalog.html', {"documents": doc_urls})
