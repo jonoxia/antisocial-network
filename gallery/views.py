@@ -641,4 +641,4 @@ def multi_upload(request):
         })
     
     # GET request - show upload form
-    return render(request, 'gallery/upload.html')
+    return render(request, 'gallery/multi_upload.html', {})
