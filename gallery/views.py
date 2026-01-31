@@ -629,8 +629,8 @@ def multi_upload(request, personName):
                 docfile = file_handle,
                 filetype = 'IMG',
                 owner = person)
-            new_doc.docfile.save()
-            new_doc.save()
+            #new_doc.docfile.save()
+            #new_doc.save()
             # TODO: get filetype from extension?
             #file_path = default_storage.save(f'uploads/{file.name}', file)
             #file_url = default_storage.url(file_path)
