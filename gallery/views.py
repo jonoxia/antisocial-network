@@ -581,11 +581,12 @@ def insert_image_inline(request):
 def list_unused_docs(request):
     # FieldFile object is not subscriptable...
     unused_docs = Document.objects.exclude(docfile__isnull = True)\
-        .filter(filetype = 'IMG', works = None)
+        .filter(filetype = 'IMG', works = None)\
+        .order_by('-uploaded_at') # most recent first
 
     doc_urls = [ doc.docfile.url for doc in unused_docs if doc.docfile is not None and doc.docfile.name != '']
     # There's at least one Document that doesn't have a valid file... it has a .docfile object but
-    # trying to access .docfile.url throws an exception. We can recognize that one by it having
+    # trying to access .docfile.url throws an exception. We can recognize that one by it having "" for name
     
     return render(request, 'gallery/img_catalog.html', {"documents": doc_urls})
     # next steps:
@@ -626,8 +627,11 @@ def multi_upload(request, personName):
             # Save each file
             new_doc = Document.objects.create(
                 docfile = file_handle,
+                filetype = 'IMG',
                 owner = person)
-            # TODO: filetype?  get from extension?
+            new_doc.docfile.save()
+            new_doc.save()
+            # TODO: get filetype from extension?
             #file_path = default_storage.save(f'uploads/{file.name}', file)
             #file_url = default_storage.url(file_path)
             
@@ -637,8 +641,7 @@ def multi_upload(request, personName):
                 'id': new_doc.id
             })
         
-        # Return JSON response or redirect
-        return JsonResponse({
+        return render(request, 'gallery/multi_upload.html', {
             'success': True,
             'files': uploaded_files,
             'count': len(uploaded_files)
