@@ -636,8 +636,8 @@ def multi_upload(request, personName):
             #file_url = default_storage.url(file_path)
             
             uploaded_files.append({
-                'name': file.name,
-                'size': file.size,
+                'name': file_handle.name,
+                'size': file_handle.size,
                 'id': new_doc.id
             })
         
