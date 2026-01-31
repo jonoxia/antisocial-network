@@ -51,7 +51,6 @@ class Work(models.Model):
     publicity = models.CharField(max_length=3,
                                  choices=PRIVACY_SETTINGS,
                                  default="PRI")
-    #thumbnail = models.ForeignKey(Document, null=True) # use this as thumbnail if present
     
 # TODO should this have an author or do we just assume it's the gallery author?
 # Can we cross-include the same work in multiple galleries?
@@ -74,7 +73,7 @@ class Document(models.Model):
                                 default="IMG")
     owner = models.ForeignKey(Human, null=True, on_delete=models.CASCADE) # TODO i want to make this false
     works = models.ManyToManyField(Work, related_name="documents")
-    # add an uploaded-at date to sort by
+    uploaded_at = models.DateTimeField(auto_now_add=True)
 
 
 class Tag(models.Model):

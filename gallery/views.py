@@ -82,9 +82,9 @@ def compress_image(document):
             img.save(document.docfile.path)
 
 
-def make_thumbnail(document):
-    path = document.docfile.path # gives absolute path to document's file
-    url = document.docfile.url
+def make_thumbnail(src_document):
+    path = src_document.docfile.path # gives absolute path to document's file
+    url = src_document.docfile.url
 
     THUMBNAIL_WIDTH = 256
 
@@ -95,12 +95,20 @@ def make_thumbnail(document):
     hsize = int((float(img.height)*float(wpercent)))
     
     img.thumbnail((THUMBNAIL_WIDTH, hsize))
-    thumbfile = filename + "_thumb.jpg"
+    thumb_filename = filename + "_thumb.jpg"  # Does this auto save to s3 now?
     img.save(thumbfile, "JPEG")
     # return URL of the thumbnail:
 
-    thumburl = ".".join(url.split(".")[:-1]) + "_thumb.jpg"
-    return thumburl
+    thumb_doc = Document(
+        filetype='IMG',
+        owner = src_document.owner
+    )
+    thumb_doc.docfile.save(thumb_filename, File(f), save=True)
+    # TODO how do we have the img library save the thumbnail into the docfile?
+
+    # thumburl = ".".join(url.split(".")[:-1]) + "_thumb.jpg"
+    # return the new thumbnail document
+    return thumb_doc
     
 
 def person_page(request, personName):
@@ -396,7 +404,6 @@ def new_work(request, personName, galleryUrlname):
                                           body = body,
                                           modifyDate = datetime.datetime.now(),
                                           publishDate = datetime.datetime.now(),
-                                          thumbnailUrl = "",
                                           sequenceNum = seq_num)
             
             # If there was a document form, create that too:
@@ -412,7 +419,7 @@ def new_work(request, personName, galleryUrlname):
 
             # Create thumbnail for PIC works:
             if newwork.workType == "PIC" and newwork.documents.count() > 0:
-                newwork.thumbnailUrl = make_thumbnail( newwork.documents.all()[0] )
+                newwork.thumbnail = make_thumbnail( newwork.documents.all()[0] )
                 newwork.save()
 
             
@@ -534,6 +541,10 @@ def delete_work(request, personName, galleryUrlname, workUrlname):
     return redirect("/%s/%s" % (personName, galleryUrlname) )
 
 def insert_image_inline(request):
+    """
+    TODO - this is only called from editwork.html, i would like it to also be usable from
+    newwork.html. For now, test it with the edit page.
+    """
     # processes form submitted by ajax
     # file is in the field named "docfile"
     matches = Human.objects.filter(account = request.user)
@@ -551,14 +562,20 @@ def insert_image_inline(request):
                                          filetype = filetype,
                                          owner = author)
         compress_image(newdoc)
+        # Need to get current work so we can add to it
+        # Send over the id or something?  Oh but wait if you're still on the "new work"
+        # page then there's no work in the db yet to attach this to. Will have to do the
+        # attachment once the work is saved... hmmm...;
         # newdoc.works.add(newwork) # add to dcurrent work? what does that do?
         newdoc.save()
 
-        path = newdoc.docfile.path # I think?
-        url = path.replace("/home/jono/antisocial-network/", "/") # TODO dont' hardcode
-        return JsonResponse({"img_url": path})
+        # conn
+        inline_placeholder = f'{{ {newdoc.id} }}'
+
+        return JsonResponse({"img_url": inline_placeholder})  # Something like this?
     # error message if document_form isn't valid:
     return JsonResponse({"error_msg": "Document form not valid"})
+
     
 def list_unused_docs(request):
     # FieldFile object is not subscriptable...
@@ -570,3 +587,21 @@ def list_unused_docs(request):
     # trying to access .docfile.url throws an exception. We can recognize that one by it having
     
     return render(request, 'gallery/img_catalog.html', {"documents": doc_urls})
+    # next steps:
+    # have an endpoint for just uploading photos with no associated work
+    # They go intot the unused docs pool
+    # Sort the unused docs pool by upload date
+    # On the unused docs page, have a UI where I can check a bunch of imgs and then click a button
+    # to turn them all into inline imgs in a post
+    # or to turn them all into a gallery
+    # Or add them to an existing gallery
+    # On the new-work or edit-work page, have an image browser where i can add images inline from
+    #  the image selector
+    #   and maybe within that browser a form to upload more images/files
+
+
+def multi_upload(request):
+    # Handle upload of multiple images at once (e.g. from the phone app, or an uploaded folder)
+    # Not associated with any work; they just go into the unused pile.
+    # Add an uploaded-at date so we can sort with newest on top.
+    pass
