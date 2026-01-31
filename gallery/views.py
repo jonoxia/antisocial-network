@@ -17,7 +17,7 @@ from gallery.forms import EditProfileForm, DocumentForm
 from gallery.forms import EditGalleryForm, NewWorkForm, EditWorkForm
 
 from django.views.decorators.http import require_http_methods
-
+from django.views.decorators.csrf import csrf_exempt
 
 def make_url_name(title, existing_names):
     # generates a unique, url-appropriate name from the given title
