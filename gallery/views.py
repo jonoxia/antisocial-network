@@ -517,7 +517,6 @@ def delete_work(request, personName, galleryUrlname, workUrlname):
     matches = Human.objects.filter(publicName = personName)
     if len(matches) == 0:
         return render(request, 'gallery/404.html', {})
-
     person = matches[0]
 
     # Look up the gallery
@@ -602,12 +601,17 @@ def list_unused_docs(request):
     #   and maybe within that browser a form to upload more images/files
 
 @require_http_methods(["GET", "POST"])
-def multi_upload(request):
+def multi_upload(request, personName):
     """
     Handle upload of multiple images at once (e.g. from the phone app, or an uploaded folder)
     Not associated with any work; they just go into the unused pile.
     Add an uploaded-at date so we can sort with newest on top.
     """
+    # Look up the person:
+    matches = Human.objects.filter(publicName = personName)
+    if len(matches) == 0:
+        return render(request, 'gallery/404.html', {})
+    person = matches[0]
 
     if request.method == 'POST':
         # Get multiple files from the request
@@ -622,7 +626,7 @@ def multi_upload(request):
             # Save each file
             new_doc = Document.objects.create(
                 docfile = file_handle,
-                owner = request.user)
+                owner = person)
             # TODO: filetype?  get from extension?
             #file_path = default_storage.save(f'uploads/{file.name}', file)
             #file_url = default_storage.url(file_path)
