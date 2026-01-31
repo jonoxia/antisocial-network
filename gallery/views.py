@@ -601,18 +601,23 @@ def list_unused_docs(request):
     #  the image selector
     #   and maybe within that browser a form to upload more images/files
 
+@csrf_exempt
 @require_http_methods(["GET", "POST"])
 def multi_upload(request, personName):
     """
     Handle upload of multiple images at once (e.g. from the phone app, or an uploaded folder)
     Not associated with any work; they just go into the unused pile.
     Add an uploaded-at date so we can sort with newest on top.
+    Making it CSRF-exempt allows the android app to post to it.
     """
     # Look up the person:
     matches = Human.objects.filter(publicName = personName)
     if len(matches) == 0:
         return render(request, 'gallery/404.html', {})
     person = matches[0]
+
+    # TODO: authenticate that i'm actually logged in as the person i'm uploading to, OR that
+    # a correct API key has been provided (from the android app).
 
     if request.method == 'POST':
         # Get multiple files from the request
