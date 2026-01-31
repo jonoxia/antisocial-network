@@ -6,6 +6,7 @@ urlpatterns = [
     path('feed', LatestEntriesFeed()),
     path('preview', views.preview_work),
     path('insert_image_inline', views.insert_image_inline),
+    path('multi_file_upload', views.multi_upload),
     path('unused_document_browser', views.list_unused_docs),
     re_path(r'^(\w+)$', views.person_page),
     re_path(r'^(\w+)/edit$', views.edit_my_profile),

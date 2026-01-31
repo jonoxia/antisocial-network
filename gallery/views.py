@@ -16,6 +16,8 @@ from gallery.models import Human, Gallery, Work, Document
 from gallery.forms import EditProfileForm, DocumentForm
 from gallery.forms import EditGalleryForm, NewWorkForm, EditWorkForm
 
+from django.views.decorators.http import require_http_methods
+
 
 def make_url_name(title, existing_names):
     # generates a unique, url-appropriate name from the given title
@@ -599,9 +601,44 @@ def list_unused_docs(request):
     #  the image selector
     #   and maybe within that browser a form to upload more images/files
 
-
+@require_http_methods(["GET", "POST"])
 def multi_upload(request):
-    # Handle upload of multiple images at once (e.g. from the phone app, or an uploaded folder)
-    # Not associated with any work; they just go into the unused pile.
-    # Add an uploaded-at date so we can sort with newest on top.
-    pass
+    """
+    Handle upload of multiple images at once (e.g. from the phone app, or an uploaded folder)
+    Not associated with any work; they just go into the unused pile.
+    Add an uploaded-at date so we can sort with newest on top.
+    """
+
+    if request.method == 'POST':
+        # Get multiple files from the request
+        files = request.FILES.getlist('files')  # 'files' is the input name
+        
+        if not files:
+            return JsonResponse({'error': 'No files provided'}, status=400)
+        
+        uploaded_files = []
+        
+        for file in files:
+            # Save each file
+            new_doc = Document.objects.create(
+                docfile = docfile,
+                filetype = filetype,
+                owner = request.user)
+            #file_path = default_storage.save(f'uploads/{file.name}', file)
+            #file_url = default_storage.url(file_path)
+            
+            uploaded_files.append({
+                'name': file.name,
+                'size': file.size,
+                'id': new_doc.id
+            })
+        
+        # Return JSON response or redirect
+        return JsonResponse({
+            'success': True,
+            'files': uploaded_files,
+            'count': len(uploaded_files)
+        })
+    
+    # GET request - show upload form
+    return render(request, 'gallery/upload.html')
