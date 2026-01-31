@@ -618,12 +618,12 @@ def multi_upload(request):
         
         uploaded_files = []
         
-        for file in files:
+        for file_handle in files:
             # Save each file
             new_doc = Document.objects.create(
-                docfile = docfile,
-                filetype = filetype,
+                docfile = file_handle,
                 owner = request.user)
+            # TODO: filetype?  get from extension?
             #file_path = default_storage.save(f'uploads/{file.name}', file)
             #file_url = default_storage.url(file_path)
             
