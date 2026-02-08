@@ -591,7 +591,7 @@ def list_unused_docs(request):
     # There's at least one Document that doesn't have a valid file... it has a .docfile object but
     # trying to access .docfile.url throws an exception. We can recognize that one by it having "" for name
 
-    galleries = Gallery.objects.filter(owner = person)
+    galleries = Gallery.objects.filter(author = person)
     
     return render(
         request,
