@@ -1,38 +1,54 @@
 {% extends "common/base.html" %}
 
+{% block extracss %}
+<link href="/static/gallery/css/writing-display.css" type="text/css" rel="stylesheet"/>
+{% endblock %}
+
+{% block extrajs %}
+<script src="/static/gallery/js/edit_work.js"></script>
+{% endblock %}
+
+
+{% block header %}
+<h1>Uploaded Images and Documents Not Yet Used In A Post</h1>
+
+{% endblock %}
+
 
 {% block content %}
 
+  {% for doc in documents %}
+<p>
+  <input type="checkbox" class="img_select_checkbox" id="{{doc.id}}">
+  <img src="{{doc.url}}" width="200px">
+</p>
+  {% endfor %}
+
+{% endblock %}
+
+{% block sidebar %}
 <div id="floating-controls">
   <form>
-    Create: <select id="what-to-create">
+    <p><span id="checked-counter">0</span> imgs selected</p>
+    <p>
+      Create: <select id="what-to-create">
       <option value="text-work">New Text Work With Selected Images Embedded</option>
       <option value="expand-gallery">Add Selected Images To Existing Gallery</option>
       <option value="new-gallery">Create New Gallery From Selected Images</option>
-    </select>
+      </select>
+    </p>
+    <p>
     <select id="gallery-to-add-to"> <!-- hide if create new gallery is selected -->
       {% for gallery in galleries %}
         <option value="{{gallery.id}}">{{gallery.title}}</option>
 	{% endfor %}
     </select>
-    Title: <input type="text" id="new-title"></input> <!-- hide if add to existing gallery is selected-->
-    <submit>Create</submit>
+    </p>
+    <p>
+      Title: <input type="text" id="new-title"></input> <!-- hide if add to existing gallery is selected-->
+    </p>
+    <input type ="submit" value="Create"/>
   </form>
 </div>
-
-  {% for doc in documents %}
-    <p><input type="checkbox" id=""><img src="{{doc}}" width="200px"></p>
-  {% endfor %}
-
-  Hey I should introduce pagination here...
-
-  maybe have some floating controls with options like...
-  "New work from selected (in gallery x)"
-  or
-  "as separate images in (existing gallery x)"
-  these are greyed out until you have some selected
-  maybe a create-gallery button here? that's P2
-
-  large chcken curry masala and large achari gobi
 
 {% endblock %}

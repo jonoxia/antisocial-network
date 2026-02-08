@@ -587,7 +587,7 @@ def list_unused_docs(request):
         .filter(filetype = 'IMG', works = None, owner = person)\
         .order_by('-uploaded_at') # most recent first
 
-    doc_urls = [ doc.docfile.url for doc in unused_docs if doc.docfile is not None and doc.docfile.name != '']
+    docs = [ {"url": doc.docfile.url, "id": doc.id} for doc in unused_docs if doc.docfile is not None and doc.docfile.name != '']
     # There's at least one Document that doesn't have a valid file... it has a .docfile object but
     # trying to access .docfile.url throws an exception. We can recognize that one by it having "" for name
 
@@ -597,7 +597,7 @@ def list_unused_docs(request):
         request,
         'gallery/img_catalog.html',
         {
-            "documents": doc_urls,
+            "documents": docs,
             "galleries": galleries
         }
     )
