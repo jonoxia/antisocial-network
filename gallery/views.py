@@ -579,20 +579,32 @@ def insert_image_inline(request):
 
     
 def list_unused_docs(request):
+    person = get_viewer(request)
+    if person is None:
+        return redirect("/")
     # FieldFile object is not subscriptable...
     unused_docs = Document.objects.exclude(docfile__isnull = True)\
-        .filter(filetype = 'IMG', works = None)\
+        .filter(filetype = 'IMG', works = None, owner = person)\
         .order_by('-uploaded_at') # most recent first
 
     doc_urls = [ doc.docfile.url for doc in unused_docs if doc.docfile is not None and doc.docfile.name != '']
     # There's at least one Document that doesn't have a valid file... it has a .docfile object but
     # trying to access .docfile.url throws an exception. We can recognize that one by it having "" for name
+
+    galleries = Gallery.objects.filter(owner = person)
     
-    return render(request, 'gallery/img_catalog.html', {"documents": doc_urls})
+    return render(
+        request,
+        'gallery/img_catalog.html',
+        {
+            "documents": doc_urls,
+            "galleries": galleries
+        }
+    )
     # next steps:
-    # have an endpoint for just uploading photos with no associated work
-    # They go intot the unused docs pool
-    # Sort the unused docs pool by upload date
+    # (Check) have an endpoint for just uploading photos with no associated work
+    # (Check) They go intot the unused docs pool
+    # (Check) Sort the unused docs pool by upload date
     # On the unused docs page, have a UI where I can check a bunch of imgs and then click a button
     # to turn them all into inline imgs in a post
     # or to turn them all into a gallery
