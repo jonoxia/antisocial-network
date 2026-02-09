@@ -3,7 +3,6 @@
  * Maybe some form validation. */
 
 $(document).ready(function() {
-
     $(".img_select_checkbox").click(function() {
         var checkedCount = $(".img_select_checkbox:checked").length;
         $("#status-message").text(checkedCount + " images selected");
@@ -22,8 +21,7 @@ $(document).ready(function() {
         }
     });
 
-
-    $("#create-button").click(function() {
+    $("#create-button").click(async function() {
         var checked_ids = [];
         $(".img_select_checkbox:checked").each(function() {
             checked_ids.push( $(this).attr("id") );
@@ -32,13 +30,13 @@ $(document).ready(function() {
 
         var form_data = new FormData( $("#creation-form")[0]);
 
-        form_data.append("selected-doc-ids", checked_ids.join(","))
+        form_data.append("selected-doc-ids", checked_ids.join(","));
 
-	var response = await fetch(url, {
-	    method: "POST",
-	    body: form_data
-	});
-	var result = await response.json();
-	$("#status-messge").text(result.message);
+        var response = await fetch(url, {
+            method: "POST",
+            body: form_data
+        });
+        var result = await response.json();
+        $("#status-messge").text(result.message);
     });
 });
