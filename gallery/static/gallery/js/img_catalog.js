@@ -30,8 +30,10 @@ $(document).ready(function() {
 
         var form_data = new FormData( $("#creation-form")[0]);
 
+	
         form_data.append("selected-doc-ids", checked_ids.join(","));
 
+	var url = "/create_from_img_catalog"
         var response = await fetch(url, {
             method: "POST",
             body: form_data

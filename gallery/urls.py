@@ -7,6 +7,7 @@ urlpatterns = [
     path('preview', views.preview_work),
     path('insert_image_inline', views.insert_image_inline),
     path('unused_document_browser', views.list_unused_docs),
+    path('create_from_img_catalog', views.unused_doc_page_submission),
     re_path(r'^(\w+)$', views.person_page),
     re_path('^(\w)/multi_file_upload', views.multi_upload),
     re_path(r'^(\w+)/edit$', views.edit_my_profile),
