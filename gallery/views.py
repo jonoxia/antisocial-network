@@ -641,6 +641,7 @@ def unused_doc_page_submission(request):
     what_to_create = request.get("what-to-create")
     new_title = request.get("new-title")
     document_ids = request.get("selected-doc-ids").split(",")
+    document_ids = [int(x) for x in document_ids]
 
     documents = Document.objects.filter(
         owner = person,
