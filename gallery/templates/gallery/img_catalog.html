@@ -5,7 +5,7 @@
 {% endblock %}
 
 {% block extrajs %}
-<script src="/static/gallery/js/edit_work.js"></script>
+<script src="/static/gallery/js/img_catalog.js"></script>
 {% endblock %}
 
 
@@ -22,32 +22,35 @@
   <input type="checkbox" class="img_select_checkbox" id="{{doc.id}}">
   <img src="{{doc.url}}" width="200px">
 </p>
+<!-- TODO: Default to having all images checked that were part of most recent upload -->
   {% endfor %}
 
 {% endblock %}
 
 {% block sidebar %}
 <div id="floating-controls">
-  <form>
+  <form id="creation-form">
     <p><span id="checked-counter">0</span> imgs selected</p>
     <p>
-      Create: <select id="what-to-create">
+      Create: <select id="what-to-create" name="what-to-create">
       <option value="text-work">New Text Work With Selected Images Embedded</option>
       <option value="expand-gallery">Add Selected Images To Existing Gallery</option>
       <option value="new-gallery">Create New Gallery From Selected Images</option>
       </select>
     </p>
     <p>
-    <select id="gallery-to-add-to"> <!-- hide if create new gallery is selected -->
+      Gallery: <select id="gallery-to-add-to" name="gallery-to-add-to">
       {% for gallery in galleries %}
         <option value="{{gallery.id}}">{{gallery.title}}</option>
 	{% endfor %}
     </select>
     </p>
     <p>
-      Title: <input type="text" id="new-title"></input> <!-- hide if add to existing gallery is selected-->
+      Title: <input type="text" id="new-title" name="new-title"></input> <!-- hide if add to existing gallery is selected-->
     </p>
-    <input type ="submit" value="Create"/>
+    <input type="button" value="Create" id="create-button"/>
+    <!-- TODO either all the checkboxes need to be in the form or we need
+	 javascript to gather IDs from checked checkboxes -->
   </form>
 </div>
 

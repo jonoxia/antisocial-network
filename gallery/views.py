@@ -357,6 +357,37 @@ def edit_gallery(request, personName, galleryUrlname):
     data = {"person": person, "form": form, "errorMsg": errorMsg}
     return render(request, 'gallery/editgallery.html', data)
 
+def create_work_helper(
+        gallery,
+        title = "",
+        workType = "PIC",
+        body = "",
+        publicity = "PRI"):
+    
+    # Get the highest sequence num of works already in the gallery:
+    existing_works = Work.objects.filter(gallery = gallery)
+    if existing_works.count() > 0:
+        seq_num = max([w.sequenceNum for w in existing_works]) + 1
+        # could also use an order-by
+    else:
+        seq_num = 1
+
+    if title == "":
+        # If title is blank, use sequence num for title:
+        title = str(seq_num)
+    used_titles = [w.title for w in Work.objects.filter(gallery = gallery)]
+    urlname = make_url_name(title, used_titles)
+    newwork, created = Work.objects.create(gallery = gallery,
+                                  urlname = urlname,
+                                  title = title,
+                                  workType = workType,
+                                  body = body,
+                                  modifyDate = datetime.datetime.now(),
+                                  publishDate = datetime.datetime.now(),
+                                  sequenceNum = seq_num)
+    return newwork
+
+
 
 def new_work(request, personName, galleryUrlname):
     matches = Human.objects.filter(publicName = personName)
@@ -386,28 +417,13 @@ def new_work(request, personName, galleryUrlname):
             body = work_form.cleaned_data["body"]
             publicity = work_form.cleaned_data["publicity"]
 
-            # Get the highest sequence num of works already in the gallery:
-            existing_works = Work.objects.filter(gallery = gallery)
-            if existing_works.count() > 0:
-                seq_num = max([w.sequenceNum for w in existing_works]) + 1
-                # could also use an order-by
-            else:
-                seq_num = 1
-
-            if title == "":
-                # If title is blank, use sequence num for title:
-                title = str(seq_num)
-            used_titles = [w.title for w in Work.objects.filter(gallery = gallery)]
-            urlname = make_url_name(title, used_titles)
-            newwork = Work.objects.create(gallery = gallery,
-                                          urlname = urlname,
-                                          title = title,
-                                          workType = workType,
-                                          body = body,
-                                          modifyDate = datetime.datetime.now(),
-                                          publishDate = datetime.datetime.now(),
-                                          sequenceNum = seq_num)
-            
+            newwork = create_work_helper(
+                gallery = gallery,
+                title = title,
+                workType = workType,
+                body = body,
+                publicity = publicity
+            )
             # If there was a document form, create that too:
             if document_form.is_valid():
                 docfile = document_form.cleaned_data["docfile"]
@@ -420,6 +436,9 @@ def new_work(request, personName, galleryUrlname):
                 newdoc.save()
 
             # Create thumbnail for PIC works:
+            # (TODO: this would be a very useful thing to have included in
+            # create_work_helper, only problem is it has to come after the document
+            # form processing... refactor)
             if newwork.workType == "PIC" and newwork.documents.count() > 0:
                 newwork.thumbnail = make_thumbnail( newwork.documents.all()[0] )
                 newwork.save()
@@ -605,13 +624,90 @@ def list_unused_docs(request):
     # (Check) have an endpoint for just uploading photos with no associated work
     # (Check) They go intot the unused docs pool
     # (Check) Sort the unused docs pool by upload date
-    # On the unused docs page, have a UI where I can check a bunch of imgs and then click a button
+    # (Check) On the unused docs page, have a UI where I can check a bunch of imgs and then click a button
     # to turn them all into inline imgs in a post
     # or to turn them all into a gallery
     # Or add them to an existing gallery
     # On the new-work or edit-work page, have an image browser where i can add images inline from
     #  the image selector
     #   and maybe within that browser a form to upload more images/files
+
+
+def unused_doc_page_submission(request):
+    person = get_viewer(request)
+    if person is None:
+        raise Exception("Not logged in")
+    gallery_id = request.get("gallery-to-add-to")
+    what_to_create = request.get("what-to-create")
+    new_title = request.get("new-title")
+    document_ids = request.get("selected-doc-ids").split(",")
+
+    documents = Document.objects.filter(
+        owner = person
+        id__in = document_ids)
+
+    gallery = None
+    if what_to_create = "new-gallery":
+        # create a new gallery
+        urlname = make_url_name(new_title, [g.urlname for g in Gallery.objects.filter(author = person)])
+        gallery, created = Gallery.objects.create(
+            author = person,
+            title = new_title,
+            urlname = urlname
+            # leaving blank: blurb, type, theme. publicity defaults to PRI.
+        )
+    else:
+        # Get named gallery
+        galleries = Gallery.objects.filter(author = person, id = gallery_id)
+        if len(galleries) == 0:
+            raise Exception("No such gallery")
+        gallery = galleries[0]
+
+
+    if what_to_create == "text-work":
+        # Create one work, type='text'
+        # Make a body that just contains placeholders for the 
+        doc_placeholders = [ "{{ %d }}" % doc.id for doc in documents ]
+        work_body_markdown = "%s\n\n%s" % (new_title, "\n\n".join(doc_placeholders))
+
+        work = create_work_helper(
+            body = work_body_markdown,
+            title = new_title,
+            workType = "WRI",
+            gallery = gallery,
+            # the thing
+        )
+        # TODO: set publicity to the new 'with key' mode, and generate a key.
+        for doc in documents:
+            doc.works.add(new_work)
+            docs.save()
+        # TODO: redirect you to the "edit work" page for this work.
+        return redirect("/%s/%s/%s/edit" % (person.publicName, gallery.urlname, work.urlname)
+        
+    else:
+        # create one work per document, type = 'img' probably.
+        # create thumbnails!
+        for doc in documents:
+            work = create_work_helper(
+                # no body, no title
+                workType = "PIC",
+                gallery = gallery,
+                # create_work_helper handles sequence_num, thumbnail
+            )
+            # TODO: set publicity to the new 'with key' mode, and generate a key.
+            doc.works.add(new_work)
+            # Make thumbnail:
+            new_work.thumbnail = make_thumbnail( doc )
+            doc.save()
+            new_work.save()
+
+
+
+    # If we got here, then redirect to the EDIT gallery page.
+    return redirect("/%s/%s/edit" % (person.publicName, gallery.urlname) )
+    
+
+    
 
 @csrf_exempt
 @require_http_methods(["GET", "POST"])

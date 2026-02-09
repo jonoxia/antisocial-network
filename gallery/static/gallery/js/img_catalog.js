@@ -21,4 +21,13 @@ $(document).ready(function() {
 	    $("#new-title").show();
 	}
     });
+
+
+    $("#create-button").click(function() {
+	var checked_ids = [];
+	$(".img_select_checkbox:checked").each(function() {
+	    checked_ids.push( $(this).attr("id") );
+	});
+	console.log("You selected: " + checked_ids.join(","));
+    });
 });
