@@ -643,11 +643,11 @@ def unused_doc_page_submission(request):
     document_ids = request.get("selected-doc-ids").split(",")
 
     documents = Document.objects.filter(
-        owner = person
+        owner = person,
         id__in = document_ids)
 
     gallery = None
-    if what_to_create = "new-gallery":
+    if what_to_create == "new-gallery":
         # create a new gallery
         urlname = make_url_name(new_title, [g.urlname for g in Gallery.objects.filter(author = person)])
         gallery, created = Gallery.objects.create(
@@ -682,7 +682,7 @@ def unused_doc_page_submission(request):
             doc.works.add(new_work)
             docs.save()
         # TODO: redirect you to the "edit work" page for this work.
-        return redirect("/%s/%s/%s/edit" % (person.publicName, gallery.urlname, work.urlname)
+        return redirect("/%s/%s/%s/edit" % (person.publicName, gallery.urlname, work.urlname))
         
     else:
         # create one work per document, type = 'img' probably.
