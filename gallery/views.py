@@ -3,12 +3,16 @@ from django.http import HttpResponse
 from django.http import JsonResponse
 from django.shortcuts import redirect
 from django.conf import settings
+from django.core.files.base import ContentFile
+from django.views.decorators.http import require_http_methods
+from django.views.decorators.csrf import csrf_exempt
 
+from io import BytesIO
 import markdown
 import datetime
 import re
-# import Pillow
 import os
+# import Pillow
 from PIL import Image
 
 from gallery.models import PRIVACY_SETTINGS
@@ -16,8 +20,6 @@ from gallery.models import Human, Gallery, Work, Document
 from gallery.forms import EditProfileForm, DocumentForm
 from gallery.forms import EditGalleryForm, NewWorkForm, EditWorkForm
 
-from django.views.decorators.http import require_http_methods
-from django.views.decorators.csrf import csrf_exempt
 
 def make_url_name(title, existing_names):
     # generates a unique, url-appropriate name from the given title
@@ -75,40 +77,57 @@ def compress_image(document):
     MAX_IMG_WIDTH = 1024
 
     if document.filetype == "IMG":
-        path = document.docfile.path
-        img = Image.open(path)
-        if img.width > MAX_IMG_WIDTH:
-            wpercent = MAX_IMG_WIDTH/float(img.width)
-            hsize = int((float(img.height)*float(wpercent)))
-            img = img.resize((MAX_IMG_WIDTH, hsize), Image.ANTIALIAS)
-            img.save(document.docfile.path)
+        with document.docfile.open('rb') as f:
+            img = Image.open(f)
+            img.load()
+            if img.width > MAX_IMG_WIDTH:
+                original_format = img.format
+                original_name = document.docfile.name
+                wpercent = MAX_IMG_WIDTH/float(img.width)
+                hsize = int((float(img.height)*float(wpercent)))
+                img = img.resize((MAX_IMG_WIDTH, hsize), Image.LANCZOS)
+                # Image.LANCZOS -> Best quality for downscaling
+
+                main_name = ".".join(original_name.split(".")[:-1])
+                file_extension = original_name.split(".")[-1]
+                new_filename = main_name + "_resized." + file_extension
+
+                # Rather than just using img.save(), the following code using
+                # BytesIO and document.docfile.save is designed to work even when
+                # the backend is Boto / S3.
+                buffer = BytesIO()
+                img.save(buffer, format=original_format)
+                buffer.seek(0)
+
+                document.docfile.save(
+                    new_filename,
+                    ContentFile(buffer.read()),
+                    save=True)
 
 
 def make_thumbnail(src_document):
-    path = src_document.docfile.path # gives absolute path to document's file
-    url = src_document.docfile.url
-
     THUMBNAIL_WIDTH = 256
+    # TODO shares some code with compress_image: refactor?
+    with src_document.docfile.open('rb') as f:
+        img = Image.open(f)
+        img.load()
+        filename, ext = os.path.splitext(src_document.docfile.name)
 
-    filename, ext = os.path.splitext(path)
-    img = Image.open(path)
-
-    wpercent = THUMBNAIL_WIDTH/float(img.width)
-    hsize = int((float(img.height)*float(wpercent)))
+        wpercent = THUMBNAIL_WIDTH/float(img.width)
+        hsize = int((float(img.height)*float(wpercent)))
     
-    img.thumbnail((THUMBNAIL_WIDTH, hsize))
-    thumb_filename = filename + "_thumb.jpg"  # Does this auto save to s3 now?
-    img.save(thumbfile, "JPEG")
-    # return URL of the thumbnail:
+        img.thumbnail((THUMBNAIL_WIDTH, hsize), Image.LANCZOS) # does lanczos work here?
+        thumb_filename = filename + "_thumb.jpg"
+        buffer = BytesIO()
+        img.save(buffer, format="JPEG")
+        buffer.seek(0)
 
-    thumb_doc = Document(
-        filetype='IMG',
-        owner = src_document.owner
-    )
-    thumb_doc.docfile.save(thumb_filename, File(f), save=True)
-    # TODO how do we have the img library save the thumbnail into the docfile?
+        thumb_doc = Document(
+            filetype='IMG',
+            owner = src_document.owner
+        )
+        thumb_doc.docfile.save(thumb_filename, ContentFile(buffer.read()), save=True)
 
-    # thumburl = ".".join(url.split(".")[:-1]) + "_thumb.jpg"
     # return the new thumbnail document
     return thumb_doc
     
@@ -377,7 +396,7 @@ def create_work_helper(
         title = str(seq_num)
     used_titles = [w.title for w in Work.objects.filter(gallery = gallery)]
     urlname = make_url_name(title, used_titles)
-    newwork, created = Work.objects.create(gallery = gallery,
+    newwork = Work.objects.create(gallery = gallery,
                                   urlname = urlname,
                                   title = title,
                                   workType = workType,
@@ -450,7 +469,7 @@ def new_work(request, personName, galleryUrlname):
             if addAnother:
                 return redirect("/%s/%s/new?addAnother=true" % (personName, galleryUrlname) )
             else:
-                return redirect("/%s/%s/%s" % (personName, galleryUrlname, urlname) )
+                return redirect("/%s/%s/%s" % (personName, galleryUrlname, newwork.urlname) )
     else:
         # Show the form for creating a new work.
         defaultType = request.GET.get("worktype", None) # read work type from URL
@@ -620,27 +639,16 @@ def list_unused_docs(request):
             "galleries": galleries
         }
     )
-    # next steps:
-    # (Check) have an endpoint for just uploading photos with no associated work
-    # (Check) They go intot the unused docs pool
-    # (Check) Sort the unused docs pool by upload date
-    # (Check) On the unused docs page, have a UI where I can check a bunch of imgs and then click a button
-    # to turn them all into inline imgs in a post
-    # or to turn them all into a gallery
-    # Or add them to an existing gallery
-    # On the new-work or edit-work page, have an image browser where i can add images inline from
-    #  the image selector
-    #   and maybe within that browser a form to upload more images/files
 
 
 def unused_doc_page_submission(request):
     person = get_viewer(request)
     if person is None:
         raise Exception("Not logged in")
-    gallery_id = request.get("gallery-to-add-to")
-    what_to_create = request.get("what-to-create")
-    new_title = request.get("new-title")
-    document_ids = request.get("selected-doc-ids").split(",")
+    gallery_id = request.POST.get("gallery-to-add-to")
+    what_to_create = request.POST.get("what-to-create")
+    new_title = request.POST.get("new-title")
+    document_ids = request.POST.get("selected-doc-ids").split(",")
     document_ids = [int(x) for x in document_ids]
 
     documents = Document.objects.filter(
@@ -651,7 +659,7 @@ def unused_doc_page_submission(request):
     if what_to_create == "new-gallery":
         # create a new gallery
         urlname = make_url_name(new_title, [g.urlname for g in Gallery.objects.filter(author = person)])
-        gallery, created = Gallery.objects.create(
+        gallery = Gallery.objects.create(
             author = person,
             title = new_title,
             urlname = urlname
@@ -680,8 +688,8 @@ def unused_doc_page_submission(request):
         )
         # TODO: set publicity to the new 'with key' mode, and generate a key.
         for doc in documents:
-            doc.works.add(new_work)
-            docs.save()
+            doc.works.add(work)
+            doc.save()
         # TODO: redirect you to the "edit work" page for this work.
         return redirect("/%s/%s/%s/edit" % (person.publicName, gallery.urlname, work.urlname))
         
@@ -696,11 +704,11 @@ def unused_doc_page_submission(request):
                 # create_work_helper handles sequence_num, thumbnail
             )
             # TODO: set publicity to the new 'with key' mode, and generate a key.
-            doc.works.add(new_work)
+            doc.works.add(work)
             # Make thumbnail:
-            new_work.thumbnail = make_thumbnail( doc )
+            work.thumbnail = make_thumbnail( doc )
             doc.save()
-            new_work.save()
+            work.save()
 
 
 

@@ -26,10 +26,13 @@ $(document).ready(function() {
         $(".img_select_checkbox:checked").each(function() {
             checked_ids.push( $(this).attr("id") );
         });
+	if (checked_ids.length == 0) {
+	    $("#status-message").text("Pick some images first!");
+	    return;
+	}
         $("#status-message").text("Creating.... ");
 
         var form_data = new FormData( $("#creation-form")[0]);
-
 	
         form_data.append("selected-doc-ids", checked_ids.join(","));
 
@@ -38,7 +41,9 @@ $(document).ready(function() {
             method: "POST",
             body: form_data
         });
-        var result = await response.json();
-        $("#status-messge").text(result.message);
+	console.log(response);
+	if (response.status == 200 && response.redirected) {
+	    window.location = response.url;
+	}
     });
 });
