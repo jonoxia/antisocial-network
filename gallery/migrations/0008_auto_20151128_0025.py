@@ -19,7 +19,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='document',
             name='filetype',
-            field=models.CharField(default=b'IMG', max_length=3, choices=[(b'IMG', b'Image'), (b'AUD', b'Audio'), (b'MOV', b'Movie')]),
+            field=models.CharField(default='IMG', max_length=3, choices=[('IMG', 'Image'), ('AUD', 'Audio'), ('MOV', 'Movie')]),
             preserve_default=True,
         ),
         migrations.AddField(

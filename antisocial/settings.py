@@ -17,7 +17,7 @@ DATABASES = {
 # 
 
 SECRET_KEY = os.environ.get('SECRET_KEY', 'your-default-secret-key')
-DEBUG = False #os.environ.get('DEBUG', 'False') == 'True'
+DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 
 INSTALLED_APPS = (
     'django.contrib.admin',
