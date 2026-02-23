@@ -544,7 +544,24 @@ def preview_work(request):
     # post markdown here to get back html preview of markdown...
     if request.method == "POST":
         body = request.POST.get("body", None)
+
+        # replace image placeholders like {{ 8 }} with img markdown
+        # xxx  becomes like ![alt text](url)
+        
         html = markdown.markdown(body) # parse markdown for display
+
+        # Turn placeholders into image tags.
+        # TODO this replicates code from work_page(); factor out!
+        for document in Document.objects.all():
+            # should be work.documents.all
+            # if we have a work reference (we might not, if this is new?)
+            # going through all documents is very inefficient
+
+            placeholder_text = f"{{{{ {document.id} }}}}"
+            if placeholder_text in body:
+                tag_text = f"<img src=\"{document.docfile.url}\">"
+                html = html.replace(placeholder_text, tag_text)
+
         return JsonResponse({"html": html})
 
 
