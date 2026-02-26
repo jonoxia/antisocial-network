@@ -15,6 +15,7 @@ import os
 # import Pillow
 from PIL import Image
 import uuid
+from itertools import chain
 
 from gallery.models import PRIVACY_SETTINGS
 from gallery.models import Human, Gallery, Work, Document, SecretKey
@@ -150,16 +151,54 @@ def make_thumbnail(src_document):
 
     # return the new thumbnail document
     return thumb_doc
-    
+
+def get_invite(request):
+    # reads key from the "invite" field, either in the url params or the session cookie.
+    # TODO: this implementation means you can only have one invite at a time... ponder.
+    key = request.GET.get("invite", None)
+    if key is not None:
+        return key
+    key = request.session.get("invite")
+    return key
+
+def get_allowed_galleries(request, person):
+    # return list of galleries that are either public or that match your invite key
+    invite = get_invite(request)
+    public_ones = Gallery.objects.filter(
+        author = person,
+        publicity = "PUB")
+    friend_ones = Gallery.objects.filter(
+        author = person,
+        publicity = "FRO",
+        secret_key__key_string = invite
+    )
+
+    if request.user == person.account:
+        mine = Gallery.objects.filter(
+            author = person, publicity__in = ["PRI", "FRO"]
+        )
+    else:
+        mine = []
+    return list( chain( public_ones, friend_ones, mine ))
+
+def gallery_is_allowed(request, gallery):
+    invite = get_invite(request)
+    # if i'm not the creator, then if it's private, i can't see it
+    if gallery.publicity == "PRI":
+        return request.user == gallery.author.account
+    # if i'm not the creator and it's friends-only, then check for invite:
+    if gallery.publicity == "FRO":
+        if invite is None or invite != gallery.secret_key.key_string:
+            return request.user == gallery.author.account
+    return True
+
 
 def person_page(request, personName):
     matches = Human.objects.filter(publicName = personName)
     if len(matches) == 0:
         return render(request, 'gallery/404.html', {})
     person = matches[0]
-    galleries = Gallery.objects.filter(author = person,
-                                       publicity = "PUB")
-    # TODO xxx also include FRO galleries matching a code you have
+    galleries = get_allowed_galleries(request, person)
 
     data = {"person": person, "galleries": galleries}
     if request.user == person.account:
@@ -191,6 +230,7 @@ def gallery_link_for_work(work, gallery_theme = None):
 
 
 def gallery_page(request, personName, galleryUrlname):
+    invite = get_invite(request)
     matches = Human.objects.filter(publicName = personName)
     if len(matches) == 0:
         return render(request, 'gallery/404.html', {})
@@ -202,23 +242,27 @@ def gallery_page(request, personName, galleryUrlname):
         return render(request, 'gallery/404.html', {})
 
     gallery = matches[0]
+    if not gallery_is_allowed(request, gallery):
+        return redirect("/%s" % (personName) )
+
     data = {"person": person, "gallery": gallery}
     data["blurb"] = markdown.markdown(gallery.blurb)
     if request.user == person.account:
         data["editable"] = True
     else:
         data["editable"] = False
-        # if i'm not the creator, then if it's private, i can't see it
-        if gallery.publicity == "PRI":
-            return redirect("/%s" % (personName) )
 
     works = Work.objects.filter(gallery = gallery).order_by("sequenceNum")
     if gallery.theme == "blog":
         # for blog page only show writings
         works = works.filter(workType = "WRI")
     data["works"] = [gallery_link_for_work(w, gallery.theme) for w in works]
-    data["othergalleries"] = Gallery.objects.filter(author = person)
+    data["othergalleries"] = get_allowed_galleries(request, person)
     data["viewer"] = get_viewer(request)
+
+    if invite is not None:
+        # If you came here with an invite link, store that in your session cookie
+        request.session["invite"] = invite
     return render(request, 'gallery/gallerypage.html', data)
 
 
@@ -235,6 +279,8 @@ def work_page(request, personName, galleryUrlname, workUrlname):
     person = matches[0]
     mine = (request.user == person.account)
 
+    if not gallery_is_allowed(request, work.gallery):
+        return redirect("/%s" % (personName) )
     body = markdown.markdown(work.body) # parse markdown for display
     unreferenced_documents = []
     for document in work.documents.all():

@@ -16,13 +16,12 @@ urlpatterns = [
         views.logout_view, name='logout'),
     path('accounts/profile/', views.login_profile_redirect,
         name='login_profile_redirect'),
-    # path('accounts/logout/', LogoutView.as_view(), name='logout'),
     # path('accounts/password_reset/', PasswordResetView.as_view(), name='password_reset'),
 
     path('', views.index_page, name="common_index_page"),
 
-    path('accounts/create',
-        views.create_account, name="create_account"),
+    #path('accounts/create',
+    #    views.create_account, name="create_account"),
 
     path('admin/', admin.site.urls),
     path('', include('gallery.urls')),

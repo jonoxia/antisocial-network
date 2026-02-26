@@ -39,7 +39,7 @@ gallery by {{person.publicName}}</h2>
 {% block sidebar %}
 {% if editable %}
     {% if gallery.secret_key %}
-      <p>Gallery key = {{ gallery.secret_key.key_string }}</p>
+      <p>Invite Link: https://nindokag.net/{{person.publicName}}/{{gallery.urlname}}?invite={{ gallery.secret_key.key_string }}</p>
     {% endif %}
     <p><a href="/{{person.publicName}}/{{gallery.urlname}}/new">New Work</a></p>
     <p><a href="/{{person.publicName}}/{{gallery.urlname}}/edit">Edit Gallery</a></p>
