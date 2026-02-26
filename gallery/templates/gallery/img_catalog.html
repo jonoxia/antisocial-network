@@ -28,6 +28,8 @@
 {% endblock %}
 
 {% block sidebar %}
+<p><a href="/{{person.publicName}}/multi_file_upload">Multi-File Upload</a></p>
+
 <div id="floating-controls">
   <form id="creation-form">
     {% csrf_token %} 

@@ -126,3 +126,6 @@ LOGGING = {
         },
     },
 }
+
+# API key required for phone app to post multi-uploads
+MULTI_UPLOAD_API_KEY = os.environ.get('MULTI_UPLOAD_API_KEY')

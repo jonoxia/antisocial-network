@@ -15,6 +15,9 @@ DOC_TYPES = [("IMG", "Image"),
              ("AUD", "Audio"),
              ("MOV", "Movie")]
 
+CONTACT_MODES = [("EML", "E-mail"),
+                 ("SMS", "Text Message")]
+
 class Human(models.Model):
     account = models.ForeignKey(User, null=False, on_delete=models.CASCADE)
     publicName = models.TextField()
@@ -24,7 +27,13 @@ class Human(models.Model):
 # i'm probably gonna want most of the user-editable fields to be parsed as markdown
 # and auto-escape any html tags you try to put in. See if there's a markdown parsing
 # library i can include.
-    
+
+class SecretKey(models.Model):
+    # in the future we could also have these for individual works
+    key_string = models.TextField()
+    created_at = models.DateTimeField()
+    invalidate_at = models.DateTimeField()
+
 class Gallery(models.Model):
     author = models.ForeignKey(Human, null=False, on_delete=models.CASCADE)
     urlname = models.TextField(null=False) # used when referring to gallery in part of url
@@ -33,11 +42,13 @@ class Gallery(models.Model):
     type = models.TextField()
     theme = models.TextField()
     publicity = models.CharField(max_length=3,
-                                choices=PRIVACY_SETTINGS,
-                                default="PRI")
+                                 choices=PRIVACY_SETTINGS,
+                                 default="PRI")
     # a unique-together constraint of author + title?
+    secret_key = models.ForeignKey(SecretKey, null=True, on_delete=models.CASCADE)
+    # secret_key is only used if publicity="FRO"
 
-    
+
 class Work(models.Model):
     gallery = models.ForeignKey(Gallery, null=False, on_delete=models.CASCADE)
     urlname = models.TextField(null=False) # used when referring to work in part of url
@@ -103,6 +114,21 @@ class GalleryCollab(models.Model):
     gallery = models.ForeignKey(Gallery, null=False, on_delete=models.CASCADE)
     permissions = models.IntegerField() # what values could this have?
     publicity = models.CharField(max_length=3,
-                                choices=PRIVACY_SETTINGS,
-                                default="PRI")
+                                 choices=PRIVACY_SETTINGS,
+                                 default="PRI")
     
+class Subscriber(models.Model):
+    person = models.ForeignKey(Human, null=False, on_delete=models.CASCADE)
+    subscriber_name = models.TextField()
+    email = models.TextField()
+    phone = models.TextField()
+    # preferred mode
+    contact_method = models.CharField(max_length=3,
+                                      choices=CONTACT_MODES,
+                                      default="EML")
+    # what tags do they listen for? Notify this subscriber by their preferred
+    # contact method whenever i make a new post with one of their tags of interest
+    interests = models.ManyToManyField(Tag, related_name="subscribers")
+
+# TODO do we need some kind of record that a subscriber has gotten notified of a post
+# already so we don't re-notify them upon saving a change to the post?

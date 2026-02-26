@@ -1,9 +1,17 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Multi-File Upload</title>
-</head>
-<body>
+{% extends "common/base.html" %}
+
+{% block extracss %}
+{% endblock %}
+
+
+{% block header %}
+<h1>Multi-File Upload</h1>
+<h2>For {{ person.publicName }}
+
+{% endblock %}
+
+{% block content %}
+
     <h1>Upload Multiple Files</h1>
     
     <form method="post" enctype="multipart/form-data">
@@ -12,10 +20,15 @@
         <button type="submit">Upload Files</button>
     </form>
     
-    {% if messages %}
-        {% for message in messages %}
-            <p>{{ message }}</p>
+    {% if success %}
+        <p>Uploaded {{ count }} files!</p>
+        {% for file in files %}
+            <p>{{ file.name }} ( {{ file.size }} )</p>
         {% endfor %}
     {% endif %}
-</body>
-</html>
+
+{% endblock %}
+
+{% block sidebar %}
+  <p><a href="/unused_document_browser">Unused Document Browser</a></p>
+{% endblock %}

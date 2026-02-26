@@ -14,9 +14,10 @@ import re
 import os
 # import Pillow
 from PIL import Image
+import uuid
 
 from gallery.models import PRIVACY_SETTINGS
-from gallery.models import Human, Gallery, Work, Document
+from gallery.models import Human, Gallery, Work, Document, SecretKey
 from gallery.forms import EditProfileForm, DocumentForm
 from gallery.forms import EditGalleryForm, NewWorkForm, EditWorkForm
 
@@ -44,7 +45,7 @@ def make_url_name(title, existing_names):
     urlname = "-".join(pieces)
 
     # If you match a reserved word, add a numeric suffix:
-    reserved_words = ["edit", "new", "newgallery", "preview", "delete", ""]
+    reserved_words = ["edit", "new", "newgallery", "preview", "delete", "", "multi_file_upload"]
     # TODO don't allow using these as usernames either!
     if urlname in reserved_words:
         suffix = 1
@@ -68,6 +69,17 @@ def get_viewer(request):
     else:
         return None
 
+def debug_exif(exif):
+    # https://sqlpey.com/python/how-to-read-exif-data-from-images-in-python/
+    # see https://pillow.readthedocs.io/en/stable/reference/ExifTags.html
+    if exif is None:
+        return
+    for key, val in img_exif.items():
+        if key in ExifTags.TAGS:
+            print(f'{ExifTags.TAGS[key]}: {val}')
+        else:
+            print(f'{key}: {val}')
+
 def compress_image(document):
     # If document.docfile is an image that is wider than MAX_IMG_WIDTH, scale it down
     # to that size, and save it as web-quality JPEG using PIL.
@@ -80,13 +92,21 @@ def compress_image(document):
         with document.docfile.open('rb') as f:
             img = Image.open(f)
             img.load()
+            debug_exif(img.getexif())
+            # TODO: store exif data here? We may lose it during resizing otherwise.
+            # One of the fields in exif tells us phone rotation when photo taken,
+            # which will help us automatically straighten out portrait mode
+            
+
             if img.width > MAX_IMG_WIDTH:
                 original_format = img.format
                 original_name = document.docfile.name
                 wpercent = MAX_IMG_WIDTH/float(img.width)
                 hsize = int((float(img.height)*float(wpercent)))
+
                 img = img.resize((MAX_IMG_WIDTH, hsize), Image.LANCZOS)
                 # Image.LANCZOS -> Best quality for downscaling
+                
 
                 main_name = ".".join(original_name.split(".")[:-1])
                 file_extension = original_name.split(".")[-1]
@@ -139,6 +159,7 @@ def person_page(request, personName):
     person = matches[0]
     galleries = Gallery.objects.filter(author = person,
                                        publicity = "PUB")
+    # TODO xxx also include FRO galleries matching a code you have
 
     data = {"person": person, "galleries": galleries}
     if request.user == person.account:
@@ -320,6 +341,10 @@ def new_gallery(request, personName):
                                                  title = title,
                                                  blurb = blurb,
                                                  publicity = publicity)
+
+                if publicity == "FRO":
+                    generate_key_for_gallery(gallery)
+                
                 return redirect("/%s/%s" % (personName, urlname))
     else:
         form = EditGalleryForm()
@@ -364,6 +389,8 @@ def edit_gallery(request, personName, galleryUrlname):
             gallery.blurb = blurb
         publicity = request.POST.get("publicity", None)
         if publicity is not None:
+            if publicity == "FRO" and gallery.publicity != "FRO":
+                generate_key_for_gallery(gallery)
             gallery.publicity = publicity
         gallery.save()
         if errorMsg == "":
@@ -652,6 +679,7 @@ def list_unused_docs(request):
         request,
         'gallery/img_catalog.html',
         {
+            "person": person,
             "documents": docs,
             "galleries": galleries
         }
@@ -744,14 +772,32 @@ def multi_upload(request, personName):
     Add an uploaded-at date so we can sort with newest on top.
     Making it CSRF-exempt allows the android app to post to it.
     """
-    # Look up the person:
+    # Look up the person in the URL:
+    authenticated = False
     matches = Human.objects.filter(publicName = personName)
     if len(matches) == 0:
         return render(request, 'gallery/404.html', {})
     person = matches[0]
 
-    # TODO: authenticate that i'm actually logged in as the person i'm uploading to, OR that
-    # a correct API key has been provided (from the android app).
+    # Authentication by means of being logged in as this user:
+    logged_in_user = None
+    matches = Human.objects.filter(account = request.user)
+    if len(matches) > 0:
+        logged_in_user = matches[0]
+    if logged_in_user is not None and logged_in_user == person:
+        authenticated = True
+
+    # Authentication by means of an API key (the code path used by the phone
+    # app posting uploads):
+    if not authenticated:
+        expected_api_key = settings.MULTI_UPLOAD_API_KEY
+        user_api_key = request.POST.get('api_key', None)
+        if user_api_key is not None and user_api_key == expected_api_key:
+            authenticated = True
+
+    # Kick you out if not authenticated:
+    if not authenticated:
+        return redirect("/")
 
     if request.method == 'POST':
         # Get multiple files from the request
@@ -768,12 +814,10 @@ def multi_upload(request, personName):
                 docfile = file_handle,
                 filetype = 'IMG',
                 owner = person)
-            #new_doc.docfile.save()
-            #new_doc.save()
+
+            compress_image(new_doc)
+
             # TODO: get filetype from extension?
-            #file_path = default_storage.save(f'uploads/{file.name}', file)
-            #file_url = default_storage.url(file_path)
-            
             uploaded_files.append({
                 'name': file_handle.name,
                 'size': file_handle.size,
@@ -781,10 +825,27 @@ def multi_upload(request, personName):
             })
         
         return render(request, 'gallery/multi_upload.html', {
+            'person': person,
             'success': True,
             'files': uploaded_files,
             'count': len(uploaded_files)
         })
     
     # GET request - show upload form
-    return render(request, 'gallery/multi_upload.html', {})
+    return render(request, 'gallery/multi_upload.html', {'person': person})
+
+
+def generate_key_for_gallery(gallery):
+    # call this when we create a gallery with publicity=FRO or change a gallery's
+    # publicity to FRO.
+    if gallery.secret_key is None:
+        now = datetime.datetime.now()
+        new_key = SecretKey.objects.create(
+            key_string = uuid.uuid1(),
+            created_at = now,
+            invalidate_at = now + datetime.timedelta(days=30)
+        )
+        gallery.secret_key = new_key
+        gallery.save()
+    # Currently if gallery already has a key we do nothing here. But we could
+    # also invalidate the old key and replace it with a new one? What's better?
