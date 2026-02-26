@@ -15,6 +15,7 @@ class EditWorkForm(forms.Form):
     title = forms.CharField(required=False) # title is optional for works
     body = forms.CharField(widget = forms.Textarea(attrs={'style': 'border-color: orange', 'cols': 80, 'rows': 100}))
     publicity = forms.ChoiceField(choices = PRIVACY_SETTINGS, initial="PRI")
+    tags = forms.CharField()
 
 class NewWorkForm(forms.Form):
     title = forms.CharField(required=False) # title is optional
@@ -23,7 +24,7 @@ class NewWorkForm(forms.Form):
     workType = forms.ChoiceField(choices = WORK_TYPES, initial="WRI")
     addAnother = forms.BooleanField(required=False)
     # "create another after this one?"
-    # why is it still treatiing this check box as must-be-checked when i am explicitly saying reuquired=False?
+    tags = forms.CharField()
 
 class DocumentForm(forms.Form):
     docfile = forms.FileField(

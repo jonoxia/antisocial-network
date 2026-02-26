@@ -86,10 +86,14 @@ class Document(models.Model):
     works = models.ManyToManyField(Work, related_name="documents")
     uploaded_at = models.DateTimeField(auto_now_add=True)
 
-
 class Tag(models.Model):
     tagText = models.TextField()
     works = models.ManyToManyField(Work, related_name="tags")
+
+# Can I tag galleries too?
+# wait the work gets the tag but the gallery gets the invite key, is that right?
+# existing work modified to get a tag -> send work link with parent gallery's invite key to matching subscribers (but not anyone who's already got that work?)
+# new work created with tag -> send work link with parent gallery's invite key to to matching subscribers
 
 class Conversation(models.Model):
     title = models.TextField()

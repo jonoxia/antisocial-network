@@ -26,7 +26,14 @@
   <!-- easier to implement if we had a URL for getting a work by sequence num -->
   {% endif %}
 </div>
-    <br><br>
+<br><br>
+
+<div id="tags">
+  {% if tags %}
+  {{ tags }}
+  {% endif %}
+  </div>
+
     <div id="work-body">
       {% if documents %}
          {% for document in documents %}

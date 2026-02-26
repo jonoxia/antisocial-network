@@ -17,7 +17,7 @@ from PIL import Image
 import uuid
 from itertools import chain
 
-from gallery.models import PRIVACY_SETTINGS
+from gallery.models import PRIVACY_SETTINGS, Tag
 from gallery.models import Human, Gallery, Work, Document, SecretKey
 from gallery.forms import EditProfileForm, DocumentForm
 from gallery.forms import EditGalleryForm, NewWorkForm, EditWorkForm
@@ -181,6 +181,7 @@ def get_allowed_galleries(request, person):
         mine = []
     return list( chain( public_ones, friend_ones, mine ))
 
+
 def gallery_is_allowed(request, gallery):
     invite = get_invite(request)
     # if i'm not the creator, then if it's private, i can't see it
@@ -319,6 +320,7 @@ def work_page(request, personName, galleryUrlname, workUrlname):
             "nextWork": nextWork, "documents": unreferenced_documents}
     data["othergalleries"] = Gallery.objects.filter(author = person)
     data["viewer"] = get_viewer(request)
+    data["tags"] = ", ".join([t.tagText for t in work.tags.all()])
     return render(request, 'gallery/workpage.html', data)
 
 
@@ -480,6 +482,18 @@ def create_work_helper(
     return newwork
 
 
+def set_tags_on_work(work, tags_string):
+    # Start by cledaring all tags...
+    work.tags.clear()
+    individual_tags = [x.strip() for x in tags_string.split(",")]
+    for tag_text in individual_tags:
+        tag, created = Tag.objects.get_or_create(tagText = tag_text)
+        tag.works.add(work)
+        tag.save()
+    work.save()
+
+    # TODO: send notifications to subscribers here.
+
 
 def new_work(request, personName, galleryUrlname):
     matches = Human.objects.filter(publicName = personName)
@@ -535,6 +549,8 @@ def new_work(request, personName, galleryUrlname):
                 newwork.thumbnail = make_thumbnail( newwork.documents.all()[0] )
                 newwork.save()
 
+            # Set tags on work (May trigger send to subscribers)
+            set_tags_on_work(work, work_form.cleaned_data["tags"])
             
             # If the "add another" checkbox is checked, then redirect to a new work form.
             # otherwise, redirect to the work page for the newly uploaded work.
@@ -598,20 +614,25 @@ def edit_work(request, personName, galleryUrlname, workUrlname):
 
             # TODO let me attach additional docs here if i want
 
+            # Set tags on work (May trigger send to subscribers)
+            set_tags_on_work(work, form.cleaned_data["tags"])
+
             # Redirect to the work page for the edited work:
             return redirect("/%s/%s/%s" % (personName, galleryUrlname, work.urlname) )
         else:
             raise Exception("Invalid form %s" % str (form.errors))
         
     else:
-        form = EditWorkForm(initial = {"title": work.title,
-                                       "body": work.body,
-                                       "publicity": work.publicity})
+        form = EditWorkForm(initial = {
+            "title": work.title,
+            "body": work.body,
+            "publicity": work.publicity,
+            "tags": ", ".join([t.tagText for t in work.tags.all()])
+        })
         document_form = DocumentForm()
         data = {"person": person, "gallery": gallery, "work": work, "work_form": form,
                 "errorMsg": "", "document_form": document_form}
         return render(request, 'gallery/editwork.html', data)
-
 
 def preview_work(request):
     # post markdown here to get back html preview of markdown...
