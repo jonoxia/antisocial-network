@@ -13,11 +13,11 @@ import datetime
 import re
 import os
 # import Pillow
-from PIL import Image
+from PIL import Image, ExifTags
 import uuid
 from itertools import chain
 
-from gallery.models import PRIVACY_SETTINGS, Tag
+from gallery.models import PRIVACY_SETTINGS, Tag, Subscriber
 from gallery.models import Human, Gallery, Work, Document, SecretKey
 from gallery.forms import EditProfileForm, DocumentForm
 from gallery.forms import EditGalleryForm, NewWorkForm, EditWorkForm
@@ -75,7 +75,7 @@ def debug_exif(exif):
     # see https://pillow.readthedocs.io/en/stable/reference/ExifTags.html
     if exif is None:
         return
-    for key, val in img_exif.items():
+    for key, val in exif.items():
         if key in ExifTags.TAGS:
             print(f'{ExifTags.TAGS[key]}: {val}')
         else:
@@ -231,7 +231,7 @@ def gallery_link_for_work(work, gallery_theme = None):
 
 
 def gallery_page(request, personName, galleryUrlname):
-    invite = get_invite(request)
+
     matches = Human.objects.filter(publicName = personName)
     if len(matches) == 0:
         return render(request, 'gallery/404.html', {})
@@ -261,6 +261,7 @@ def gallery_page(request, personName, galleryUrlname):
     data["othergalleries"] = get_allowed_galleries(request, person)
     data["viewer"] = get_viewer(request)
 
+    invite = get_invite(request)
     if invite is not None:
         # If you came here with an invite link, store that in your session cookie
         request.session["invite"] = invite
@@ -492,7 +493,39 @@ def set_tags_on_work(work, tags_string):
         tag.save()
     work.save()
 
-    # TODO: send notifications to subscribers here.
+    # Send notifications to subscribers here.
+    if work.gallery.publicity == "PRI":
+        return
+    # TODO this replicates some code from gallery_link_for_work
+    link = "/%s/%s/%s" % (
+            work.gallery.author.publicName,
+            work.gallery.urlname,
+            work.urlname
+        )
+
+    if work.gallery.publicity == "FRO":
+        key = work.gallery.secret_key.key_string
+        link = link + "?invite=%s" % key
+
+    print("Sending link %s", link)
+    notification_list = []
+    subscribers = Subscriber.objects.filter(
+        interests__in = work.tags.all() # Is that a valid way to filter?
+    )
+    print("To subscribers...")
+    # Debug this by printing something like 'sending link x to (list of emial addresses"
+    for s in subscribers:
+        print("... to %s (%s)" % (s.email, s.phone))
+
+    # Pseudocode:
+    # if work is public, make public link
+    # if work is friends-only, make friends invite link
+    # if work is private, do nothing
+    # get set of subscribers who are connected to any of the tags
+    # de-dupe.
+    # Filter out subscribers who were already alerted of this work.
+    # send link to each subscriber. (For now, just log this for testing)
+    # mark each subscriber as having been notified.
 
 
 def new_work(request, personName, galleryUrlname):
@@ -550,7 +583,7 @@ def new_work(request, personName, galleryUrlname):
                 newwork.save()
 
             # Set tags on work (May trigger send to subscribers)
-            set_tags_on_work(work, work_form.cleaned_data["tags"])
+            set_tags_on_work(newwork, work_form.cleaned_data["tags"])
             
             # If the "add another" checkbox is checked, then redirect to a new work form.
             # otherwise, redirect to the work page for the newly uploaded work.
