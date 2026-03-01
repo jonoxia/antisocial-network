@@ -51,7 +51,8 @@ def notify_subscribers(work):
 
 
 def send_to_discord_channel(link, channel):
-    # Discord — easiest of the three. You just make an HTTP POST to a webhook URL, no library needed:
+    # Discord supports HTTP POST to a webhook URL, no library needed; HOWEVER you need
+    # to be server admin to set up the webhook. Discord TOS prohibits "self-bots"
     print(f"Posting link to discord channel {channel}")
     requests.post(webhook_url, json={"content": "New post: https://yourblog.com/posts/123"})
 
