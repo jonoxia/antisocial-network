@@ -493,39 +493,7 @@ def set_tags_on_work(work, tags_string):
         tag.save()
     work.save()
 
-    # Send notifications to subscribers here.
-    if work.gallery.publicity == "PRI":
-        return
-    # TODO this replicates some code from gallery_link_for_work
-    link = "/%s/%s/%s" % (
-            work.gallery.author.publicName,
-            work.gallery.urlname,
-            work.urlname
-        )
-
-    if work.gallery.publicity == "FRO":
-        key = work.gallery.secret_key.key_string
-        link = link + "?invite=%s" % key
-
-    print("Sending link %s", link)
-    notification_list = []
-    subscribers = Subscriber.objects.filter(
-        interests__in = work.tags.all() # Is that a valid way to filter?
-    )
-    print("To subscribers...")
-    # Debug this by printing something like 'sending link x to (list of emial addresses"
-    for s in subscribers:
-        print("... to %s (%s)" % (s.email, s.phone))
-
-    # Pseudocode:
-    # if work is public, make public link
-    # if work is friends-only, make friends invite link
-    # if work is private, do nothing
-    # get set of subscribers who are connected to any of the tags
-    # de-dupe.
-    # Filter out subscribers who were already alerted of this work.
-    # send link to each subscriber. (For now, just log this for testing)
-    # mark each subscriber as having been notified.
+    notify_subscribers(work)
 
 
 def new_work(request, personName, galleryUrlname):

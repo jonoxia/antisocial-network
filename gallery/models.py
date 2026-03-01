@@ -133,8 +133,9 @@ class GalleryCollab(models.Model):
 class Subscriber(models.Model):
     person = models.ForeignKey(Human, null=False, on_delete=models.CASCADE)
     subscriber_name = models.TextField()
-    email = models.TextField()
-    phone = models.TextField()
+    email = models.TextField(default='')
+    phone = models.TextField(default='')
+    url = models.TextField(default='')
     # preferred mode
     contact_method = models.CharField(max_length=3,
                                       choices=CONTACT_MODES,
@@ -143,5 +144,12 @@ class Subscriber(models.Model):
     # contact method whenever i make a new post with one of their tags of interest
     interests = models.ManyToManyField(Tag, related_name="subscribers")
 
-# TODO do we need some kind of record that a subscriber has gotten notified of a post
-# already so we don't re-notify them upon saving a change to the post?
+
+# Record when a subscriber has been notified of a post already, so we don't
+# re-notify them upon saving a change to the post:
+class SubscriberBeenNotified(models.Model):
+    subscriber = models.ForeignKey(Subscriber, null=False, on_delete=models.CASCADE)
+    work = models.ForeignKey(Work, null=False, on_delete=models.CASCADE)
+    notified_at = models.DateTimeField()
+    class Meta:
+        unique_together = ('subscriber', 'work')
