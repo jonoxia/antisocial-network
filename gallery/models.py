@@ -16,7 +16,11 @@ DOC_TYPES = [("IMG", "Image"),
              ("MOV", "Movie")]
 
 CONTACT_MODES = [("EML", "E-mail"),
-                 ("SMS", "Text Message")]
+                 ("SMS", "Text Message"),
+                 ("DIS", "Discord Channel"),
+                ]
+# we can also send all public posts to Bluesky but that's just one place so it
+# doesn't need further info.
 
 class Human(models.Model):
     account = models.ForeignKey(User, null=False, on_delete=models.CASCADE)
@@ -47,6 +51,8 @@ class Gallery(models.Model):
     # a unique-together constraint of author + title?
     secret_key = models.ForeignKey(SecretKey, null=True, on_delete=models.CASCADE)
     # secret_key is only used if publicity="FRO"
+    class Meta:
+        unique_together = ('author', 'urlname')
 
 
 class Work(models.Model):
@@ -62,6 +68,9 @@ class Work(models.Model):
     publicity = models.CharField(max_length=3,
                                  choices=PRIVACY_SETTINGS,
                                  default="PRI")
+    class Meta:
+        unique_together = ('gallery', 'urlname')
+        
     
 # TODO should this have an author or do we just assume it's the gallery author?
 # Can we cross-include the same work in multiple galleries?
