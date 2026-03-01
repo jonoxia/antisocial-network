@@ -849,9 +849,10 @@ def multi_upload(request, personName):
 
     # Authentication by means of being logged in as this user:
     logged_in_user = None
-    matches = Human.objects.filter(account = request.user)
-    if len(matches) > 0:
-        logged_in_user = matches[0]
+    if request and hasattr(request, 'user') and request.user is not None:
+        matches = Human.objects.filter(account = request.user)
+        if len(matches) > 0:
+            logged_in_user = matches[0]
     if logged_in_user is not None and logged_in_user == person:
         authenticated = True
 
