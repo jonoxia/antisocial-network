@@ -829,6 +829,13 @@ def unused_doc_page_submission(request):
     return redirect("/%s/%s/edit" % (person.publicName, gallery.urlname) )
     
 
+def debug_request(request):
+    for attr in dir(request):
+        if not attr.startswith('_'):
+            try:
+                print(f'request.{attr} = {getattr(request, attr)}')
+            except Exception as e:
+                print(f'request.{attr} = <error: {e}>')
     
 
 @csrf_exempt
@@ -849,6 +856,7 @@ def multi_upload(request, personName):
 
     # Authentication by means of being logged in as this user:
     logged_in_user = None
+    debug_request(request)
     if request and hasattr(request, 'user') and request.user is not None:
         matches = Human.objects.filter(account = request.user)
         if len(matches) > 0:
