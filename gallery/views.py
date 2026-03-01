@@ -857,7 +857,9 @@ def multi_upload(request, personName):
     # Authentication by means of being logged in as this user:
     logged_in_user = None
     debug_request(request)
-    if request and hasattr(request, 'user') and request.user is not None:
+    # The POST from the app gets assigned an AnonymousUser object by Django
+    # this will have .is_authenticated false.
+    if request.user.is_authenticated:
         matches = Human.objects.filter(account = request.user)
         if len(matches) > 0:
             logged_in_user = matches[0]
