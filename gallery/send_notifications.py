@@ -1,4 +1,5 @@
 import requests
+from django.core.mail import EmailMultiAlternatives
 from gallery.models import Work, Tag, Subscriber
 
 def notify_subscribers(work):
@@ -59,6 +60,14 @@ def send_to_discord_channel(link, channel):
 
 def send_to_email(link, email_addr):
     print(f"Posting link to email address {email_addr}")
+    email = EmailMultiAlternatives(
+        subject='New post on nindokag.net',
+        body='Hey there is a new post for you to read at %s' % link,
+        from_email='jono@nindokag.net',
+        to=[email_addr],
+    )
+    email.attach_alternative('<p>HTML version here</p>', 'text/html')
+    email.send()
 
 
 def post_to_bsky(link):

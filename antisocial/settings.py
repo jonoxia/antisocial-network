@@ -128,3 +128,12 @@ LOGGING = {
 
 # API key required for phone app to post multi-uploads
 MULTI_UPLOAD_API_KEY = os.environ.get('MULTI_UPLOAD_API_KEY')
+
+
+MAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.mailgun.org'  # or smtp.sendgrid.net, etc.
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = os.environ.get('MAILGUN_SMTP_USERNAME')
+EMAIL_HOST_PASSWORD = os.environ.get('MAILGUN_SMTP_PASSWORD')
+
