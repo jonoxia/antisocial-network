@@ -21,7 +21,7 @@ from gallery.models import PRIVACY_SETTINGS, Tag, Subscriber
 from gallery.models import Human, Gallery, Work, Document, SecretKey
 from gallery.forms import EditProfileForm, DocumentForm
 from gallery.forms import EditGalleryForm, NewWorkForm, EditWorkForm
-
+from gallery.send_notifications import notify_subscribers
 
 def make_url_name(title, existing_names):
     # generates a unique, url-appropriate name from the given title
