@@ -1,6 +1,7 @@
 import requests
 from django.core.mail import EmailMultiAlternatives
-from gallery.models import Work, Tag, Subscriber
+from gallery.models import Work, Tag, Subscriber, SubscriberBeenNotified
+
 
 def notify_subscribers(work):
     # Send notifications to subscribers here.
