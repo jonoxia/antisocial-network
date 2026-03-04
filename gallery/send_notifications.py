@@ -1,6 +1,7 @@
 import requests
 from django.core.mail import EmailMultiAlternatives
 from gallery.models import Work, Tag, Subscriber, SubscriberBeenNotified
+import datetime
 
 
 def notify_subscribers(work):
