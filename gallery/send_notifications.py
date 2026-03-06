@@ -86,7 +86,7 @@ def send_to_email(link, email_addr, work):
     
 
 
-def post_to_bsky(link):
+def post_to_bsky(link, work):
     # only public ones
     pass
 
