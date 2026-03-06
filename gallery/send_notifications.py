@@ -33,10 +33,12 @@ def notify_subscribers(work):
         if s in already_notified:
             continue
         if s.contact_method == "EML":
-            send_to_email(link, s.email)
+            send_to_email(link, s.email, work)
         elif s.contact_method == "DIS":
-            send_to_discord_channel(link, s.url)
+            send_to_discord_channel(link, s.url, work)
         elif s.contact_method == "SMS":
+            # Probably this will be done on the phone, not here.
+            # In this case, don't create a SubscriberBeenNotified.
             continue
         print("... to %s (%s)" % (s.email, s.phone))
 
@@ -49,7 +51,7 @@ def notify_subscribers(work):
         )
 
     if work.gallery.publicity == "PUB":
-        post_to_bsky(link)
+        post_to_bsky(link, work)
 
 
 
@@ -60,16 +62,28 @@ def send_to_discord_channel(link, channel):
     requests.post(webhook_url, json={"content": "New post: https://yourblog.com/posts/123"})
 
 
-def send_to_email(link, email_addr):
+def send_to_email(link, email_addr, work):
+    title = work.title
     print(f"Posting link to email address {email_addr}")
+    text_body = """
+        New post on Nindokag.blog:\n
+        {}\n
+        {}
+        """.format(title, link)
+    html_body = """
+        <h2>{}</h2>
+        <a href="{}">New post on Nindokag.blog</a>
+        """.format(title, link)
     email = EmailMultiAlternatives(
-        subject='New post on nindokag.net',
-        body='Hey there is a new post for you to read at %s' % link,
-        from_email='jono@nindokag.net',
+        subject='New post on nindokag.blog',
+        body=text_body,
+        from_email='noreply@nindokag.blog',
         to=[email_addr],
     )
-    email.attach_alternative('<p>HTML version here</p>', 'text/html')
+    # Is there a way to use Django's templating in the HTML aternative?
+    email.attach_alternative(html_body, 'text/html')
     email.send()
+    
 
 
 def post_to_bsky(link):
