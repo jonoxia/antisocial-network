@@ -133,9 +133,9 @@ class GalleryCollab(models.Model):
 class Subscriber(models.Model):
     person = models.ForeignKey(Human, null=False, on_delete=models.CASCADE)
     subscriber_name = models.TextField()
-    email = models.TextField(default='')
-    phone = models.TextField(default='')
-    url = models.TextField(default='')
+    email = models.TextField(default='', blank=True)
+    phone = models.TextField(default='', blank=True)
+    url = models.TextField(default='', blank=True)
     # preferred mode
     contact_method = models.CharField(max_length=3,
                                       choices=CONTACT_MODES,
