@@ -15,7 +15,7 @@ class EditWorkForm(forms.Form):
     title = forms.CharField(required=False) # title is optional for works
     body = forms.CharField(widget = forms.Textarea(attrs={'style': 'border-color: orange', 'cols': 80, 'rows': 100}))
     publicity = forms.ChoiceField(choices = PRIVACY_SETTINGS, initial="PRI")
-    tags = forms.CharField()
+    tags = forms.CharField(required=False)
 
 class NewWorkForm(forms.Form):
     title = forms.CharField(required=False) # title is optional
@@ -24,11 +24,12 @@ class NewWorkForm(forms.Form):
     workType = forms.ChoiceField(choices = WORK_TYPES, initial="WRI")
     addAnother = forms.BooleanField(required=False)
     # "create another after this one?"
-    tags = forms.CharField()
+    tags = forms.CharField(required=False)
 
 class DocumentForm(forms.Form):
     docfile = forms.FileField(
         label = "Pick a file, any file",
-        help_text = "Huzzah!"
+        help_text = "",
+        required=False
     )
     filetype = forms.ChoiceField(choices = DOC_TYPES, initial="IMG")

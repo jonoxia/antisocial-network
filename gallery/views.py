@@ -292,6 +292,8 @@ def work_page(request, personName, galleryUrlname, workUrlname):
             tag_text = f"<img src=\"{document.docfile.url}\">"
             body = body.replace(placeholder_text, tag_text)
         else:
+            # Include documents that are associated but don't have text placeholders
+            # (This handles the edge case of a type-IMG work with a blank body):
             unreferenced_documents.append(document)
 
     # Get the previous and next works, if any, so that we can put the links
@@ -484,6 +486,8 @@ def create_work_helper(
 
 
 def set_tags_on_work(work, tags_string):
+    if tags_string is None or tags_string == "":
+        return
     # Start by cledaring all tags...
     work.tags.clear()
     individual_tags = [x.strip() for x in tags_string.split(",")]
@@ -494,6 +498,41 @@ def set_tags_on_work(work, tags_string):
     work.save()
 
     notify_subscribers(work)
+
+
+def associate_documents_to_work(work):
+    # When saving a work (new or edited), create associations between the work
+    # and all document placeholders.
+
+    # Use a regexp to find all strings of form {{ number }}
+
+    #text = "Hello {{ 123 }} world {{ 456 }} and {{ 789 }}"
+
+    matches = re.findall(r'\{\{\s*(\d+)\s*\}\}', work.body)
+    doc_ids = [int(m) for m in matches]
+    print("Doc ids found in work body text as placeholders:")
+    print(doc_ids)
+
+    existing_docs = work.documents.all()
+    existing_doc_ids = [ doc.id for doc in existing_docs ]
+    print("Doc ids already associated with this work:")
+    print(existing_doc_ids)
+
+    for doc_id in doc_ids:
+        if not doc_id in existing_doc_ids:
+            print("Associating with {}".format(doc_id))
+            document = Document.objects.get( id = doc_id )
+            work.documents.add(document)
+
+    # If it didn't have a thumbnail before, look for the first img doc with an
+    # association, then make that the thumbnail
+    if work.thumbnail is None and work.documents.count() > 0:
+        img_docs = [w for w in work.documents.all() if w.filetype == "IMG"]
+        if len(img_docs) > 0:
+            work.thumbnail = make_thumbnail( img_docs[0] )
+
+    work.save()
+
 
 
 def new_work(request, personName, galleryUrlname):
@@ -531,24 +570,23 @@ def new_work(request, personName, galleryUrlname):
                 body = body,
                 publicity = publicity
             )
-            # If there was a document form, create that too:
+            # If the 'upload document' part of the form was filled out, create
+            # that Document and associate it with the work:
             if document_form.is_valid():
                 docfile = document_form.cleaned_data["docfile"]
                 filetype = document_form.cleaned_data["filetype"]
-                newdoc = Document.objects.create(docfile = docfile,
-                                                 filetype = filetype,
-                                                 owner = person)
-                compress_image(newdoc)
-                newdoc.works.add(newwork)
-                newdoc.save()
+                if docfile is not None:
+                    newdoc = Document.objects.create(docfile = docfile,
+                                                     filetype = filetype,
+                                                     owner = person)
+                    compress_image(newdoc)
+                    newdoc.works.add(newwork)
+                    newdoc.save()
 
-            # Create thumbnail for PIC works:
-            # (TODO: this would be a very useful thing to have included in
-            # create_work_helper, only problem is it has to come after the document
-            # form processing... refactor)
-            if newwork.workType == "PIC" and newwork.documents.count() > 0:
-                newwork.thumbnail = make_thumbnail( newwork.documents.all()[0] )
-                newwork.save()
+            # Create associations between the work and any documents referenced by
+            # doc placeholders in its body text; this will also set thumbnail if
+            # there's not already one.
+            associate_documents_to_work(newwork)
 
             # Set tags on work (May trigger send to subscribers)
             set_tags_on_work(newwork, work_form.cleaned_data["tags"])
@@ -606,6 +644,8 @@ def edit_work(request, personName, galleryUrlname, workUrlname):
             publicity = form.cleaned_data["publicity"]
 
             # TODO does changing a work's title change its URLname as well?
+            # Let's say, at least for now, it does not change. That way, existing
+            # links to it will not be broken.
 
             work.title = title
             work.body = body
@@ -613,9 +653,11 @@ def edit_work(request, personName, galleryUrlname, workUrlname):
             work.modifyDate = datetime.datetime.now()
             work.save()
 
-            # TODO let me attach additional docs here if i want
+            # Create associations between the work and any documents referenced by
+            # doc placeholders in its body text:
+            associate_documents_to_work(work)
 
-            # Set tags on work (May trigger send to subscribers)
+            # Set tags on work (May trigger send to subscribers):
             set_tags_on_work(work, form.cleaned_data["tags"])
 
             # Redirect to the work page for the edited work:
@@ -702,9 +744,8 @@ def insert_image_inline(request):
     if len(matches) > 0:
         author = matches[0]
 
-    # TODO instead of this, insert a placeholder with the document ID, and
-    # link the document!
-    
+    # Create the document and return the img placeholder containing its ID.
+    # Nothing else is done until we save the work.
     document_form = DocumentForm(request.POST, request.FILES)
     if document_form.is_valid():
         docfile = document_form.cleaned_data["docfile"]
@@ -713,17 +754,14 @@ def insert_image_inline(request):
                                          filetype = filetype,
                                          owner = author)
         compress_image(newdoc)
-        # Need to get current work so we can add to it
-        # Send over the id or something?  Oh but wait if you're still on the "new work"
-        # page then there's no work in the db yet to attach this to. Will have to do the
-        # attachment once the work is saved... hmmm...;
-        # newdoc.works.add(newwork) # add to dcurrent work? what does that do?
+        # We don't create an association here, because the work might not exist yet.
+        # but as soon as
+        # we save a work (either new or edited), we find all inline-placeholders in it,
+        # create associations, and use one as the thumbnail if there's not already a
+        # thumbnail.
         newdoc.save()
 
-        # conn
-        inline_placeholder = f'{{ {newdoc.id} }}'
-
-        return JsonResponse({"img_url": inline_placeholder})  # Something like this?
+        return JsonResponse({"img_placeholder": newdoc.id })  # Something like this?
     # error message if document_form isn't valid:
     return JsonResponse({"error_msg": "Document form not valid"})
 

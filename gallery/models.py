@@ -65,6 +65,7 @@ class Work(models.Model):
     workType = models.TextField() # maybe make this null=false? a char field?
     publishDate = models.DateTimeField(null=True, default=None)
     modifyDate = models.DateTimeField()
+    # todo add a describedEventDate
     publicity = models.CharField(max_length=3,
                                  choices=PRIVACY_SETTINGS,
                                  default="PRI")

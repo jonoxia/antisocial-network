@@ -42,11 +42,11 @@ class GalleryTestCase(TestCase):
                                               "password": "moonhunter"})
         # Should see an edit link on my own profile page:
         results = c.get("/kaya")
-        self.assertIn('a href="/kaya/edit"', results.content)
+        self.assertIn('a href="/kaya/edit"', results.content.decode("utf-8"))
 
         # Should not see the link on other peopls' pages:
         results = c.get("/kruger")
-        self.assertNotIn('a href="/kruger/edit"', results.content)
+        self.assertNotIn('a href="/kruger/edit"', results.content.decode("utf-8"))
 
         # If I try to load the edit page directly i should get redirected:
         results = c.get("/kruger/edit")
@@ -63,7 +63,7 @@ class GalleryTestCase(TestCase):
         self.createBasicUser()
         results = c.get("/kruger")
         self.assertEqual(results.status_code, 200)
-        self.assertIn("your bio here", results.content)
+        self.assertIn("your bio here", results.content.decode("utf-8"))
 
         results = c.post("/accounts/login/", {"username": "kruger",
                                               "password": "stormlord"})
@@ -74,7 +74,7 @@ class GalleryTestCase(TestCase):
         results = c.get("/kruger")
         self.assertEqual(results.status_code, 200)
         self.assertIn("interested in lightning and destroying civilization",
-                        results.content)
+                        results.content.decode("utf-8"))
 
     
     def testNewGalleryLink(self):
@@ -90,17 +90,17 @@ class GalleryTestCase(TestCase):
                                               "password": "moonhunter"})
         # Should see a new gallery link on my own profile page:
         results = c.get("/kaya")
-        self.assertIn('a href="/kaya/newgallery"', results.content)
+        self.assertIn('a href="/kaya/newgallery"', results.content.decode("utf-8"))
         # but not on other peoples':
         results = c.get("/krueger")
-        self.assertNotIn('a href="/krueger/newgallery"', results.content)
+        self.assertNotIn('a href="/krueger/newgallery"', results.content.decode("utf-8"))
 
         # If I load my own I should get a page with a form:
         results = c.get("/kaya/newgallery")
         self.assertEqual(results.status_code, 200)
-        self.assertIn('<input type="submit"', results.content)
+        self.assertIn('<input type="submit"', results.content.decode("utf-8"))
         # it should not be showing me any error messages:
-        self.assertNotIn('This field is required', results.content)
+        self.assertNotIn('This field is required', results.content.decode("utf-8"))
 
         # If I load somebody else's i just get redirected:
         results = c.post("/accounts/login/", {"username": "kaya",
@@ -129,7 +129,7 @@ class GalleryTestCase(TestCase):
         self.assertTrue(results.url.endswith, "/kruger/lightning")
 
         results = c.get("/kruger/lightning")
-        self.assertIn("some pics i took in the desert", results.content)
+        self.assertIn("some pics i took in the desert", results.content.decode("utf-8"))
 
         
     def testLinksToMyGalleries(self):
@@ -144,7 +144,7 @@ class GalleryTestCase(TestCase):
                                       "theme": "cloudy",
                                       "publicity": "PUB"})
         results = c.get("/kruger")
-        self.assertIn('a href="/kruger/lightning"', results.content)
+        self.assertIn('a href="/kruger/lightning"', results.content.decode("utf-8"))
 
         
     def testViewMyGallery(self):
@@ -175,16 +175,16 @@ class GalleryTestCase(TestCase):
         # My gallery:
         results = c.get("/kaya/doggies")
         self.assertEqual(results.status_code, 200)
-        self.assertIn('a href="/kaya/doggies/edit"', results.content)
+        self.assertIn('a href="/kaya/doggies/edit"', results.content.decode("utf-8"))
 
         # Test my gallery page also has a New Work link
-        self.assertIn('a href="/kaya/doggies/new"', results.content)
+        self.assertIn('a href="/kaya/doggies/new"', results.content.decode("utf-8"))
 
         # Should not see the link on other peopls' pages:
         results = c.get("/kruger/lightning")
         self.assertEqual(results.status_code, 200)
-        self.assertNotIn('a href="/kruger/lightning/edit"', results.content)
-        self.assertNotIn('a href="/kruger/lightning/new"', results.content)
+        self.assertNotIn('a href="/kruger/lightning/edit"', results.content.decode("utf-8"))
+        self.assertNotIn('a href="/kruger/lightning/new"', results.content.decode("utf-8"))
 
 
     def testPrivateGallery(self):
@@ -205,7 +205,7 @@ class GalleryTestCase(TestCase):
         # I should be able to see the gallery (with a note that it's private)
         results = c.get("/kruger/plans")
         self.assertEqual(results.status_code, 200)
-        self.assertIn("Private Collection", results.content)
+        self.assertIn("Private Collection", results.content.decode("utf-8"))
 
         # but kaya shouldn't, she should be redirected:
         results = c.post("/accounts/login/", {"username": "kaya",
@@ -250,7 +250,7 @@ class GalleryTestCase(TestCase):
                                               "password": "moonhunter"})
         results = c.get("/kruger/plans")
         self.assertEqual(results.status_code, 200)
-        self.assertIn("for destroying civilization", results.content)
+        self.assertIn("for destroying civilization", results.content.decode("utf-8"))
 
 
     def testGalleryUsesMarkdown(self):
@@ -264,7 +264,7 @@ class GalleryTestCase(TestCase):
                                         "publicity": "PRI"})
         results = c.get("/kruger/plans")
         self.assertEqual(results.status_code, 200)
-        self.assertIn("<strong>for destroying civilization</strong>", results.content)
+        self.assertIn("<strong>for destroying civilization</strong>", results.content.decode("utf-8"))
 
 
     def testChangeGalleryName(self):
@@ -281,12 +281,12 @@ class GalleryTestCase(TestCase):
 
         results = c.get("/kruger/lightning")
         self.assertEqual(results.status_code, 200)
-        self.assertIn("favorite lightning pics", results.content)
+        self.assertIn("favorite lightning pics", results.content.decode("utf-8"))
 
         # gallery should no longer exist under old title:
         results = c.get("/kruger/thunder")
         self.assertEqual(results.status_code, 200)
-        self.assertIn("No user/gallery/work by that name.", results.content)
+        self.assertIn("No user/gallery/work by that name.", results.content.decode("utf-8"))
 
 
     def testAddWorkToGallery(self):
@@ -316,8 +316,8 @@ class GalleryTestCase(TestCase):
         # Test that /kruger/plans/Menoth renders a page with the right title/body
         results = c.get("/kruger/plans/menoth")
         self.assertEqual(results.status_code, 200)
-        self.assertIn("<h2>Menoth</h2>", results.content)
-        self.assertIn("First we electrocute all the choir", results.content)
+        self.assertIn("<h2>Menoth</h2>", results.content.decode("utf-8"))
+        self.assertIn("First we electrocute all the choir", results.content.decode("utf-8"))
         
         # TODO test that i can't create a work in someone else's gallery
         
@@ -350,24 +350,24 @@ class GalleryTestCase(TestCase):
 
         results = c.get("/kruger/plans/menoth")
         self.assertEqual(results.status_code, 200)
-        self.assertIn("<h2>Menoth</h2>", results.content)
+        self.assertIn("<h2>Menoth</h2>", results.content.decode("utf-8"))
         self.assertIn("First we electrocute all the <strong>choir</strong>",
-                        results.content) # markdown shoulda converted ** to <strong>
+                        results.content.decode("utf-8")) # markdown shoulda converted ** to <strong>
 
         # test that page includes edit link, if i'm kruger
-        self.assertIn('<a href="/kruger/plans/menoth/edit">', results.content)
+        self.assertIn('<a href="/kruger/plans/menoth/edit">', results.content.decode("utf-8"))
 
         # test that the work page links back to the person and gallery pages
-        self.assertIn('<a href="/kruger">', results.content)
-        self.assertIn('<a href="/kruger/plans">', results.content)
+        self.assertIn('<a href="/kruger">', results.content.decode("utf-8"))
+        self.assertIn('<a href="/kruger/plans">', results.content.decode("utf-8"))
 
         # Test that link to new work shows up on the /kruger/plans gallery page
         results = c.get("/kruger/plans")
         self.assertEqual(results.status_code, 200)
-        self.assertIn('<a href="/kruger/plans/menoth">Menoth', results.content)
+        self.assertIn('<a href="/kruger/plans/menoth">Menoth', results.content.decode("utf-8"))
 
         # There should not be a Next link because this is only work in gallery so far
-        self.assertNotIn('Next: ', results.content)
+        self.assertNotIn('Next: ', results.content.decode("utf-8"))
         # Make a second post in gallery:
         results = c.post("/kruger/plans/new", {"workType": "WRI",
                                                "title": "Khador",
@@ -376,12 +376,12 @@ class GalleryTestCase(TestCase):
         # first work's page should have a next link to the second:
         results = c.get("/kruger/plans/menoth")
         self.assertEqual(results.status_code, 200)
-        self.assertIn('<a href="/kruger/plans/khador">Next', results.content)
+        self.assertIn('<a href="/kruger/plans/khador">Next', results.content.decode("utf-8"))
 
         # second work's page should have a previous link to the first:
         results = c.get("/kruger/plans/khador")
         self.assertEqual(results.status_code, 200)
-        self.assertIn('<a href="/kruger/plans/menoth">Previous', results.content)
+        self.assertIn('<a href="/kruger/plans/menoth">Previous', results.content.decode("utf-8"))
 
         # TODO test that default state of work is private until I publish it
 
@@ -404,7 +404,7 @@ class GalleryTestCase(TestCase):
         # inside a text field:
         results = c.get("/kruger/plans/menoth/edit")
         self.assertEqual(results.status_code, 200)
-        self.assertIn("First we electrocute all the **choir**", results.content)
+        self.assertIn("First we electrocute all the **choir**", results.content.decode("utf-8"))
         
         # Test changing publicity:
         matches = Work.objects.filter(gallery__title = "plans")
@@ -482,7 +482,7 @@ class GalleryTestCase(TestCase):
         self.assertTrue(results.url.endswith, "/kruger/plans/new_1")
         results = c.get("/kruger/plans/new_1")
         self.assertEqual(results.status_code, 200)
-        self.assertIn("<h2>new</h2>", results.content)
+        self.assertIn("<h2>new</h2>", results.content.decode("utf-8"))
 
         # If we try to make two works with same title in same gallery, the second
         # one should get a suffix to make both URLs unique, but titles should not
@@ -499,7 +499,7 @@ class GalleryTestCase(TestCase):
         self.assertTrue(results.url.endswith, "/kruger/plans/wolves")
         results = c.get("/kruger/plans/wolves")
         self.assertEqual(results.status_code, 200)
-        self.assertIn("<h2>wolves</h2>", results.content)
+        self.assertIn("<h2>wolves</h2>", results.content.decode("utf-8"))
         results = c.post("/kruger/plans/new", {"workType": "WRI",
                                                "title": "wolves",
                                                "body": "hello",
@@ -513,7 +513,7 @@ class GalleryTestCase(TestCase):
         self.assertTrue(results.url.endswith, "/kruger/plans/wolves_1")
         results = c.get("/kruger/plans/wolves_1")
         self.assertEqual(results.status_code, 200)
-        self.assertIn("<h2>wolves</h2>", results.content)
+        self.assertIn("<h2>wolves</h2>", results.content.decode("utf-8"))
 
     def testBlankTitle(self):
         c = Client()
@@ -535,7 +535,7 @@ class GalleryTestCase(TestCase):
         results = c.get("/kruger/plans")
         self.assertEqual(results.status_code, 200)
         # should be a link to "1" in these results:
-        self.assertIn('<a href="/kruger/plans/1">1</a>', results.content)
+        self.assertIn('<a href="/kruger/plans/1">1</a>', results.content.decode("utf-8"))
         # in the future the content of this link might be a thumbnail or whatever.
 
 
@@ -543,3 +543,40 @@ class GalleryTestCase(TestCase):
         # not sure how we would test file upload?
         pass
         
+
+# Tests to still write:
+# - post new work with and without tags
+# - post new work with and without something in the img upload field
+#     if something is in the img upload field, then when we view the work, that img should display, whether there's
+#     a placeholder for it in work body or not
+#     it should also be set as thumbnail.
+# - post a new work with no image, then go to edit work, use the inline img form to add an image, then save
+#    - should get the img placeholder in the work body
+#    - should get association created between document and work
+#    - document file should have been uploaded
+#    - the first document that's an img should also become the thumbnail
+#
+# - create a subscriber to a tag
+#    - make a new public post with that tag. subscriber should get notified with a plain link.
+#    - make a new friends-only post in a public gallery with that tag. subscriber should get
+#       notified with a link containing an invite key (Should there be some auth for this???)
+#    - make a new post in a friends-only gallery with that tag. subscriber should get notified
+#       with a link containing an invite key that works for the gallery.
+#    - after loading a page with the invite key, i should also be able to list the gallery and
+#       visit any other works in it.
+#    - make a new post with no tags, save it.  Then add a tag to it and save it again. Subscribers
+#       should get notified as above.
+#    - do the above and edit it and save it again. No notifications should go out to subscribers
+#       who already got a notification.
+#    - Add a new subscriber to that tag.  Save a post that's already gone out to existing
+#       subscribers. The new subscriber should still be notified.
+#    - Add multiple tags. Subscribers to any of the tags should get notified. Someone who subscribes
+#       to all of the tags on the post should still only get notified once.
+#
+#  - multi-upload some images.
+#   - go to the unused img browser. They should all be listed there.
+#     - select some and save as "new gallery"
+#     - select some and save as "new entries to existing gallery"
+#     - select some and save as "new work with all these images"
+#   - the new work(s) and/or gallery should be created. Those images should no longer appear
+#     as unused images.

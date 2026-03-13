@@ -2,7 +2,7 @@ import requests
 from django.core.mail import EmailMultiAlternatives
 from gallery.models import Work, Tag, Subscriber, SubscriberBeenNotified
 import datetime
-
+from django.conf import settings
 
 def notify_subscribers(work):
     # Send notifications to subscribers here.
@@ -17,7 +17,7 @@ def notify_subscribers(work):
 
     if work.gallery.publicity == "FRO":
         key = work.gallery.secret_key.key_string
-        link = link + "?invite=%s" % key
+        link = settings.URLBASE + link + "?invite=%s" % key
 
     print("Sending link %s", link)
     notification_list = []
@@ -49,6 +49,11 @@ def notify_subscribers(work):
             work = work,
             notified_at = datetime.datetime.now()
         )
+        # Is this working right? I tried saving a post and it gave an error that
+        # subscriberBeenNotified already exists for that (subscriber, work) but
+        # how would it get here if subscriberBeenNotified already existed? Unless the
+        # "if s in already_notified" is not working correctly?
+        # test this.
 
     if work.gallery.publicity == "PUB":
         post_to_bsky(link, work)
@@ -74,15 +79,17 @@ def send_to_email(link, email_addr, work):
         <h2>{}</h2>
         <a href="{}">New post on Nindokag.blog</a>
         """.format(title, link)
-    email = EmailMultiAlternatives(
-        subject='New post on nindokag.blog',
-        body=text_body,
-        from_email='noreply@nindokag.blog',
-        to=[email_addr],
-    )
+    print(text_body)
+    print(html_body)
+    #email = EmailMultiAlternatives(
+    #    subject='New post on nindokag.blog',
+    #    body=text_body,
+    #    from_email='noreply@nindokag.blog',
+    #    to=[email_addr],
+    #)
     # Is there a way to use Django's templating in the HTML aternative?
-    email.attach_alternative(html_body, 'text/html')
-    email.send()
+    #email.attach_alternative(html_body, 'text/html')
+    #email.send()
     
 
 

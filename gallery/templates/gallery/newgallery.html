@@ -1,4 +1,8 @@
 {% extends "common/base.html" %}
+
+{% block header %}
+{% endblock %}
+
 {% block content %}
 
 {{ errorMsg }}
@@ -6,11 +10,21 @@
 Creating a new gallery for {{ person.publicName }}.
 
 <form method="POST" action="">
-{% csrf_token %}
-{{ form.non_field_errors }}
-{{ form.errors }}
-{{ form.as_table }}
-<input type="submit" value="Save"/>
+  {{ form.non_field_errors }}
+  {{ form.errors }}
+  <table>
+    {% for field in form %}
+    <tr>
+      <th>{{ field.label }}</th>
+      <td>{{ field }}</td>
+    </tr>
+    {% endfor %}
+    <tr>
+    <td>{% csrf_token %}</td>
+    <td><input type="submit" value="Save"/></td>
+  </tr>
+</table>
 </form>
+
 
 {% endblock %}
