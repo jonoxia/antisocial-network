@@ -1,0 +1,103 @@
+{% extends "common/nosidebar.html" %}
+
+{% block header %}
+  <h2>Nindokag's Antisocial Network</h2>
+{% endblock %}
+
+{% block content %}
+
+<table class="frontpage">
+  <tr>
+    <td>Latest Comic:</td><td>Latest Music:</td><td>Latest Nature Photos:<br>
+  </tr>
+  <tr>
+    <td>
+      <a href="{{ comics.link }}"><h3>{{ comics.title }}</h3></a>
+    </td>
+    <td>
+      <a href="{{ music.link }}"><h3>{{ music.title }}</h3></a><br>
+    </td>
+    <td>
+      <a href="{{ nature_photos.link }}"><h3>{{ nature_photos.title }}</h3></a><br>
+    </td>
+  </tr>
+
+  <tr>
+    <td>
+      <a href="{{ comics.link }}"><img src="{{ comics.img }}"></a>
+    </td>
+    <td>
+      <a href="{{ music.link }}"><img src="{{ music.img }}"></a>
+    </td>
+    <td>
+      <a href="{{ nature_photos.link }}"><img src="{{ nature_photos.img }}"></a>
+    </td>
+  </tr>
+
+  <tr>
+    <td>    
+      <a href="{{ comics.gallery_link }}">Comics Archive</a>
+    </td>  
+    <td>
+      <a href="{{ music.gallery_link }}">Music Archive</a>
+    </td>
+    <td>
+      <a href="{{ nature.gallery_link }}">Nature Photos Archive</a>
+    </td>
+  </tr>
+
+  <tr>
+    <td>
+      Latest Writing:
+    </td>
+    <td>
+      Latest Tinkering:
+    </td>
+    <td>
+      .
+    </td>
+  </tr>
+
+  <tr>
+    <td>
+      <a href="{{ writings.link }}"><h3>{{ writings.title }}</h3></a>
+    </td>
+    <td>
+      <a href="{{ projects.link }}"><h3>{{ projects.title }}</h3></a><br>
+    </td>
+    <td>
+      About me and this site:
+    </td>
+  </tr>
+      
+    
+  <tr>
+    <td>
+      {% if writings.img %}
+      <a href="{{ writings.link }}"><img src="{{ writings.img }}"></a><br>
+      {% endif %}
+    </td>
+    <td>
+      <a href="{{ projects.link }}"><img src="{{ projects.img }}"></a><br>
+    </td>
+    <td>
+      <a href="/j">Who dis guy</a>
+    </td>
+  </tr>
+
+  <tr>
+    <td>
+      <a href="{{ writings.gallery_link }}">Effortpost Archive</a>
+    </td>
+    <td>
+      <a href="{{ projects.gallery_link }}">Tinkering Archive</a>
+    </td>
+    <td>
+      .
+    </td>
+  </tr>
+
+</table>
+
+
+{% endblock %}
