@@ -5,6 +5,7 @@ from django.contrib.auth import authenticate
 from django.contrib.auth import login
 from django.db import IntegrityError
 from django.contrib.auth.models import User
+from django.conf import settings
  
 from common.forms import CreateAccountForm
 from gallery.models import Human, Work
@@ -27,21 +28,22 @@ MY_GALLERY_NAMES = {
 }
 
 def index_page(request):
-    front_page_contents = {}
+    main_username = settings.WHO_IS_FRONTPAGE
+    front_page_contents = { "whois": main_username }
     for gallery_name in MY_GALLERY_NAMES:
         gallery_urlname = MY_GALLERY_NAMES[gallery_name]
         latest_addition = Work.objects.filter(
-            gallery__author__publicName = "j",
+            gallery__author__publicName = main_username,
             gallery__urlname = gallery_urlname
         ).order_by("-publishDate")
 
         front_page_contents[gallery_name] = {
-            "gallery_link": "/j/{}".format( gallery_urlname )
+            "gallery_link": "/{}/{}".format( main_username, gallery_urlname )
         }
 
         if latest_addition.count() > 0:
             post = latest_addition[0]
-            link =  "/j/{}/{}".format( post.gallery.urlname, post.urlname)
+            link =  "/{}/{}/{}".format( main_username, post.gallery.urlname, post.urlname)
             img = post.thumbnail.docfile.url if post.thumbnail is not None else None
             front_page_contents[gallery_name].update({
                 "title": post.title,

@@ -1,7 +1,7 @@
 {% extends "common/nosidebar.html" %}
 
 {% block header %}
-  <h2>Nindokag's Antisocial Network</h2>
+  <h2>{{ whois }}'s Antisocial Network</h2>
 {% endblock %}
 
 {% block content %}
@@ -66,7 +66,7 @@
       <a href="{{ projects.link }}"><h3>{{ projects.title }}</h3></a><br>
     </td>
     <td>
-      About me and this site:
+      .
     </td>
   </tr>
       
@@ -81,7 +81,7 @@
       <a href="{{ projects.link }}"><img src="{{ projects.img }}"></a><br>
     </td>
     <td>
-      <a href="/j">Who dis guy</a>
+      <a href="/{{ whois }}">About This Site</a>
     </td>
   </tr>
 

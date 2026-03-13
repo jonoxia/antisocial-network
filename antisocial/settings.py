@@ -139,3 +139,4 @@ EMAIL_HOST_PASSWORD = os.environ.get('MAILGUN_SMTP_PASSWORD')
 
 
 URLBASE = os.environ.get('SITE_BASE_URL')
+WHO_IS_FRONTPAGE = os.environ.get('WHO_IS_FRONTPAGE')
