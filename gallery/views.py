@@ -347,13 +347,14 @@ def edit_my_profile(request, personName):
             
             if document_form.is_valid():
                 docfile = document_form.cleaned_data["docfile"]
-                filetype = document_form.cleaned_data["filetype"]
-                newdoc = Document.objects.create(docfile = docfile,
-                                                 filetype = filetype,
-                                                 owner = person)
-                compress_image(newdoc)
-                person.pictureUrl = newdoc.docfile.url
-                person.save()
+                if docfile is not None:
+                    filetype = document_form.cleaned_data["filetype"]
+                    newdoc = Document.objects.create(docfile = docfile,
+                                                     filetype = filetype,
+                                                     owner = person)
+                    compress_image(newdoc)
+                    person.pictureUrl = newdoc.docfile.url
+                    person.save()
 
             return redirect("/%s" % (personName))
     else:
