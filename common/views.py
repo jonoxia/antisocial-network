@@ -7,7 +7,7 @@ from django.db import IntegrityError
 from django.contrib.auth.models import User
  
 from common.forms import CreateAccountForm
-from gallery.models import Human
+from gallery.models import Human, Work
 
 def login_profile_redirect(request):
     # Default page to go to upon login if "next" param is not specified:
@@ -18,7 +18,41 @@ def logout_view(request):
     logout(request)
     return redirect("/")
 
+MY_GALLERY_NAMES = {
+    "comics": "comics",
+    "music": "music",
+    "projects": "tinkering",
+    "writings": "effortposts",
+    "nature_photos": "views-of-nature"
+}
+
 def index_page(request):
+    front_page_contents = {}
+    for gallery_name in MY_GALLERY_NAMES:
+        gallery_urlname = MY_GALLERY_NAMES[gallery_name]
+        latest_addition = Work.objects.filter(
+            gallery__author__publicName = "j",
+            gallery__urlname = gallery_urlname
+        ).order_by("-publishDate")
+
+        front_page_contents[gallery_name] = {
+            "gallery_link": "/j/{}".format( gallery_urlname )
+        }
+
+        if latest_addition.count() > 0:
+            post = latest_addition[0]
+            link =  "/j/{}/{}".format( post.gallery.urlname, post.urlname)
+            img = post.thumbnail.docfile.url if post.thumbnail is not None else None
+            front_page_contents[gallery_name].update({
+                "title": post.title,
+                "img": img,
+                "link": link
+            })
+
+    return render(request, 'common/frontpage.html', front_page_contents)
+        
+
+def login_page(request):
     return render(request, 'common/index.html', {})
 
 def create_account(request):
@@ -39,7 +73,6 @@ def create_account(request):
                     if user is not None:
                         if user.is_active:
                             Human.objects.create(account = user,
-                                                 pictureUrl = "your picture here",
                                                  publicName = username,
                                                  bio = "your bio here")
                             login(request, user)

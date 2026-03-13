@@ -9,20 +9,27 @@ from common import views
 urlpatterns = [
     # Examples:
     # url(r'^$', 'antisocial.views.home', name='home'),
-    path('accounts/login/',
+    path('accounts/login',
         LoginView.as_view(template_name='common/index.html'),
         name="login"),
-    path('accounts/logout/',
+    path('accounts/logout',
         views.logout_view, name='logout'),
     path('accounts/profile/', views.login_profile_redirect,
         name='login_profile_redirect'),
     # path('accounts/password_reset/', PasswordResetView.as_view(), name='password_reset'),
-
+    path('admin', admin.site.urls),
     path('', views.index_page, name="common_index_page"),
-
-    #path('accounts/create',
-    #    views.create_account, name="create_account"),
-
-    path('admin/', admin.site.urls),
-    path('', include('gallery.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+# Allow this path in debug / testing mode, not in production:
+if settings.DEBUG:
+    urlpatterns += [
+        path('accounts/create',
+             views.create_account, name="create_account"),
+    ]
+
+# This must be included last so that we check all admin and utility URLs before we start
+# looking for matching gallery names.
+urlpatterns += [
+    path('', include('gallery.urls')),
+]

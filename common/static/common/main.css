@@ -86,3 +86,14 @@ body a {
     text-align: left;
     margin: 2em;
 }
+
+table.frontpage {
+  table-layout: fixed;
+  width: calc(100% - 2em);
+  margin-left: 1em;
+  margin-right: 1em;
+}
+
+table.frontpage td, table.frontpage th {
+  width: 33.333%;
+}
