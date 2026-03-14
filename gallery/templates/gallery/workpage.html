@@ -14,15 +14,15 @@
 {% block content %}
 
 <div class="navigation">
-  {% if previousWork %}
-  <a href="/{{person.publicName}}/{{gallery.urlname}}/{{previousWork.urlname}}">Previous: {{ previousWork.title }}</a>
+  {% if newerWork %}
+  <a href="/{{person.publicName}}/{{gallery.urlname}}/{{newerWork.urlname}}">Newer: {{ newerWork.title }}</a>
 <!-- easier to implement if we had a URL for getting a work by sequence num -->
   {% endif %}
 &nbsp;&nbsp;
 <a href="/{{person.publicName}}/{{gallery.urlname}}">Back to gallery</a>
 &nbsp;&nbsp;
-  {% if nextWork %}
-  <a href="/{{person.publicName}}/{{gallery.urlname}}/{{nextWork.urlname}}">Next: {{ nextWork.title }}</a>
+  {% if olderWork %}
+  <a href="/{{person.publicName}}/{{gallery.urlname}}/{{olderWork.urlname}}">Older: {{ olderWork.title }}</a>
   <!-- easier to implement if we had a URL for getting a work by sequence num -->
   {% endif %}
 </div>
@@ -66,15 +66,15 @@
     </div>
 
 <div class="navigation">
-  {% if previousWork %}
-  <a href="/{{person.publicName}}/{{gallery.urlname}}/{{previousWork.urlname}}">Previous: {{ previousWork.title }}</a>
+  {% if newerWork %}
+  <a href="/{{person.publicName}}/{{gallery.urlname}}/{{newerWork.urlname}}">Newer: {{ newerWork.title }}</a>
 <!-- easier to implement if we had a URL for getting a work by sequence num -->
   {% endif %}
 &nbsp;&nbsp;
 <a href="/{{person.publicName}}/{{gallery.urlname}}">Back to gallery</a>
 &nbsp;&nbsp;
-  {% if nextWork %}
-  <a href="/{{person.publicName}}/{{gallery.urlname}}/{{nextWork.urlname}}">Next: {{ nextWork.title }}</a>
+  {% if olderWork %}
+  <a href="/{{person.publicName}}/{{gallery.urlname}}/{{olderWork.urlname}}">Older: {{ olderWork.title }}</a>
   <!-- easier to implement if we had a URL for getting a work by sequence num -->
   {% endif %}
 </div>

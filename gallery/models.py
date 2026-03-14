@@ -65,6 +65,7 @@ class Work(models.Model):
     workType = models.TextField() # maybe make this null=false? a char field?
     publishDate = models.DateTimeField(null=True, default=None)
     modifyDate = models.DateTimeField()
+    happenedDate = models.DateTimeField(null=True) # date of events described in post
     # todo add a describedEventDate
     publicity = models.CharField(max_length=3,
                                  choices=PRIVACY_SETTINGS,
@@ -92,9 +93,11 @@ class Document(models.Model):
     filetype = models.CharField(max_length=3,
                                 choices=DOC_TYPES,
                                 default="IMG")
+    # Should i have a field for original filename?
     owner = models.ForeignKey(Human, null=True, on_delete=models.CASCADE) # TODO i want to make this false
     works = models.ManyToManyField(Work, related_name="documents")
     uploaded_at = models.DateTimeField(auto_now_add=True)
+    happened_at = models.DateTimeField(null=True) # e.g. date photo was taken
 
 class Tag(models.Model):
     tagText = models.TextField()

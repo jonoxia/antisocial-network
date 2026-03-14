@@ -6,6 +6,7 @@ from django.conf import settings
 from django.core.files.base import ContentFile
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_exempt
+from django.db.models import F
 
 from io import BytesIO
 import markdown
@@ -14,6 +15,7 @@ import re
 import os
 # import Pillow
 from PIL import Image, ExifTags
+import piexif
 import uuid
 from itertools import chain
 
@@ -75,11 +77,59 @@ def debug_exif(exif):
     # see https://pillow.readthedocs.io/en/stable/reference/ExifTags.html
     if exif is None:
         return
-    for key, val in exif.items():
-        if key in ExifTags.TAGS:
-            print(f'{ExifTags.TAGS[key]}: {val}')
-        else:
-            print(f'{key}: {val}')
+    print("Here is the exif: ")
+    print( exif )
+    print( dir( exif) )
+
+    exif_ifd = exif.get('Exif', {})
+    date_taken = exif_ifd.get(piexif.ExifIFD.DateTimeOriginal)
+    if date_taken:
+        date_taken = date_taken.decode('utf-8')
+        print("Date taken: ")
+        print(date_taken)
+        # 2024:06:28 17:32:00
+
+
+    zeroth_ifd = exif.get('0th', {})
+    orientation = zeroth_ifd.get(piexif.ImageIFD.Orientation)
+    if orientation:
+        print(orientation)
+    #for key, val in exif.items():
+    #    if key in ExifTags.TAGS:
+    #        print(f'{ExifTags.TAGS[key]}: {val}')
+    #    else:
+    #        print(f'{key}: {val}')
+
+def get_date_from_exif(image):
+    if image.info.get('exif', None) is None:
+        return None
+    exif_dict = piexif.load(image.info.get('exif'))
+    if exif_dict is None:
+        return None
+    if not 'Exif' in exif_dict:
+        return None
+    exif_ifd = exif_dict.get('Exif', {})
+    date_taken = exif_ifd.get(piexif.ExifIFD.DateTimeOriginal)
+    if date_taken is None:
+        return None
+    date_taken = date_taken.decode('utf-8')
+    return datetime.datetime.strptime(date_taken, "%Y:%m:%d %H:%M:%S")
+
+def get_date_from_filename(filename):
+    just_filename = filename.split("/")[-1]
+    try:
+        # Style of filename "20251227_114106.jpg"
+        date_part = just_filename.split("_")[0]
+        return datetime.datetime.strptime(date_part, "%Y%m%d")
+    except ValueError:
+        # Style of filename "apr_14.jpg"
+        prefix_part = just_filename.split(".")[0]
+        first_2_parts = "_".join(prefix_part.split("_")[:2])
+        print("filename is {}".format(just_filename))
+        print("good part of filename is {}".format(first_2_parts))
+        dt = datetime.datetime.strptime(first_2_parts, "%b_%d")
+        return datetime.datetime(year = 2025, month=dt.month, day=dt.day)
+
 
 def compress_image(document):
     # If document.docfile is an image that is wider than MAX_IMG_WIDTH, scale it down
@@ -92,12 +142,23 @@ def compress_image(document):
     if document.filetype == "IMG":
         with document.docfile.open('rb') as f:
             img = Image.open(f)
+
+            happened_date = get_date_from_exif(img)
+            if happened_date is None:
+                happened_date = get_date_from_filename(document.docfile.name)
+
+            document.happened_at = happened_date
+
+            #exif_dict = piexif.load(img.info.get('exif', b''))
+            #debug_exif(exif_dict)
+
             img.load()
-            debug_exif(img.getexif())
+            # My existing comic img files were mostly transferred through Discord, which strips
+            # img data. Look at the date created or filename instead?
+
             # TODO: store exif data here? We may lose it during resizing otherwise.
             # One of the fields in exif tells us phone rotation when photo taken,
-            # which will help us automatically straighten out portrait mode
-            
+            # which will help us automatically straighten out portrait mode            
 
             if img.width > MAX_IMG_WIDTH:
                 original_format = img.format
@@ -221,13 +282,17 @@ def gallery_link_for_work(work, gallery_theme = None):
     work_url = "/%s/%s/%s" % (work.gallery.author.publicName,
                               work.gallery.urlname,
                               work.urlname)
+    if work.happenedDate is not None:
+        happened_date_str = "( {} )".format( work.happenedDate )
+    else:
+        happened_date_str = ""
 
     # Thumbnail URL if available:
-    if work.workType == "PIC" and work.thumbnail is not None:
+    if work.thumbnail is not None:
         thumbnailUrl = work.thumbnail.docfile.url
-        return '<li><a href="%s"><img src="%s"></a><p>%s</p></li>' % (work_url, thumbnailUrl, work.title)
+        return '<li><a href="%s"><img src="%s"></a><p>%s</p> %s</li> ' % (work_url, thumbnailUrl, work.title, happened_date_str)
     else:
-        return '<li><a href="%s">%s</a></li>' % (work_url, work.title)
+        return '<li><a href="%s">%s</a> %s</li>' % (work_url, work.title, happened_date_str)
 
 
 def gallery_page(request, personName, galleryUrlname):
@@ -253,10 +318,14 @@ def gallery_page(request, personName, galleryUrlname):
     else:
         data["editable"] = False
 
-    works = Work.objects.filter(gallery = gallery).order_by("sequenceNum")
-    if gallery.theme == "blog":
-        # for blog page only show writings
-        works = works.filter(workType = "WRI")
+    works = Work.objects.filter(gallery = gallery).order_by(
+        F('happenedDate').desc(nulls_last=True),
+        F('sequenceNum').desc(nulls_last=True)
+    )
+    # was "-sequenceNum"
+    #if gallery.theme == "blog":
+    #    # was showing only writings when theme was blog - is this a thing we still want?
+    #    works = works.filter(workType = "WRI")
     data["works"] = [gallery_link_for_work(w, gallery.theme) for w in works]
     data["othergalleries"] = get_allowed_galleries(request, person)
     data["viewer"] = get_viewer(request)
@@ -305,7 +374,11 @@ def work_page(request, personName, galleryUrlname, workUrlname):
     # If we're ordering by something other than sequence number, we have to retreive
     # all works in the gallery and order them by whatever in order to decide what
     # the "previous" and "next" are.
-    siblings = Work.objects.filter(gallery = work.gallery).order_by("sequenceNum")
+    siblings = Work.objects.filter(gallery = work.gallery).order_by(
+        F('happenedDate').desc(nulls_last=True),
+        F('sequenceNum').desc(nulls_last=True)
+    )
+
     siblings = [s for s in siblings]
     myIndex = siblings.index(work)
     if myIndex > 0:
@@ -319,8 +392,8 @@ def work_page(request, personName, galleryUrlname, workUrlname):
 
     documents = work.documents.all()
     data = {"person": person, "gallery": work.gallery, "work": work,
-            "mine": mine, "body": body, "previousWork": previousWork,
-            "nextWork": nextWork, "documents": unreferenced_documents}
+            "mine": mine, "body": body, "newerWork": previousWork,
+            "olderWork": nextWork, "documents": unreferenced_documents}
     data["othergalleries"] = Gallery.objects.filter(author = person)
     data["viewer"] = get_viewer(request)
     data["tags"] = ", ".join([t.tagText for t in work.tags.all()])
@@ -448,6 +521,8 @@ def edit_gallery(request, personName, galleryUrlname):
         if errorMsg == "":
             return redirect("/%s/%s" % (personName, gallery.urlname) )
 
+    # Perhaps we have a form field with an option of how to sort the gallery
+
     form = EditGalleryForm(initial = {"title": gallery.title,
                                       "blurb": gallery.blurb,
                                       "publicity": gallery.publicity})
@@ -461,7 +536,7 @@ def create_work_helper(
         workType = "PIC",
         body = "",
         publicity = "PRI"):
-    
+
     # Get the highest sequence num of works already in the gallery:
     existing_works = Work.objects.filter(gallery = gallery)
     if existing_works.count() > 0:
@@ -483,6 +558,7 @@ def create_work_helper(
                                   modifyDate = datetime.datetime.now(),
                                   publishDate = datetime.datetime.now(),
                                   sequenceNum = seq_num)
+    # TODO have the work get its happenedDate from the document's happened_at field.
     return newwork
 
 
@@ -524,6 +600,14 @@ def associate_documents_to_work(work):
             print("Associating with {}".format(doc_id))
             document = Document.objects.get( id = doc_id )
             work.documents.add(document)
+
+    # If the work didn't have a happenedDate, and one of these docs does
+    # have a happened_at, then copy the date from the document to the work.
+    if work.happenedDate is None:
+        docdates = [doc.happened_at for doc in work.documents.all() \
+                    if doc.happened_at is not None]
+        if len(docdates) > 0:
+            work.happenedDate = max( docdates )
 
     # If it didn't have a thumbnail before, look for the first img doc with an
     # association, then make that the thumbnail
@@ -827,7 +911,7 @@ def unused_doc_page_submission(request):
 
     if what_to_create == "text-work":
         # Create one work, type='text'
-        # Make a body that just contains placeholders for the 
+        # Make a body that just contains placeholders for the documents.
         doc_placeholders = [ "{{ %d }}" % doc.id for doc in documents ]
         work_body_markdown = "%s\n\n%s" % (new_title, "\n\n".join(doc_placeholders))
 
@@ -836,33 +920,35 @@ def unused_doc_page_submission(request):
             title = new_title,
             workType = "WRI",
             gallery = gallery,
-            # the thing
         )
+
         # TODO: set publicity to the new 'with key' mode, and generate a key.
         for doc in documents:
-            doc.works.add(work)
+            # associate_documents_to_work might make this unneccessary
+            doc.works.add(work) 
             doc.save()
-        # TODO: redirect you to the "edit work" page for this work.
+        associate_documents_to_work(work)
+        # Redirect you to the "edit work" page for this work.
         return redirect("/%s/%s/%s/edit" % (person.publicName, gallery.urlname, work.urlname))
         
     else:
         # create one work per document, type = 'img' probably.
-        # create thumbnails!
+        # Sort documents oldest to newest so that the oldest ones get the lowest sequence
+        # number
+        documents = documents.order_by("happened_at")
         for doc in documents:
             work = create_work_helper(
                 # no body, no title
                 workType = "PIC",
                 gallery = gallery,
-                # create_work_helper handles sequence_num, thumbnail
+                # create_work_helper handles sequence_num
             )
             # TODO: set publicity to the new 'with key' mode, and generate a key.
             doc.works.add(work)
-            # Make thumbnail:
-            work.thumbnail = make_thumbnail( doc )
+            # associate_documents_to_work will set thumbnail
+            associate_documents_to_work(work)
             doc.save()
             work.save()
-
-
 
     # If we got here, then redirect to the EDIT gallery page.
     return redirect("/%s/%s/edit" % (person.publicName, gallery.urlname) )

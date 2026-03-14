@@ -9,7 +9,7 @@ urlpatterns = [
     path('unused_document_browser', views.list_unused_docs),
     path('create_from_img_catalog', views.unused_doc_page_submission),
     re_path(r'^(\w+)$', views.person_page),
-    re_path('^(\w)/multi_file_upload', views.multi_upload),
+    re_path(r'^(\w+)/multi_file_upload', views.multi_upload),
     re_path(r'^(\w+)/edit$', views.edit_my_profile),
     re_path(r'^(\w+)/newgallery$', views.new_gallery),
     re_path(r'^(\w+)/([\w\-_]+)$', views.gallery_page),
