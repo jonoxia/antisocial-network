@@ -6,7 +6,8 @@ from django.contrib.auth import login
 from django.db import IntegrityError
 from django.contrib.auth.models import User
 from django.conf import settings
- 
+from django.db.models import F
+
 from common.forms import CreateAccountForm
 from gallery.models import Human, Work
 
@@ -35,7 +36,7 @@ def index_page(request):
         latest_addition = Work.objects.filter(
             gallery__author__publicName = main_username,
             gallery__urlname = gallery_urlname
-        ).order_by("-publishDate")
+        ).order_by(F('happenedDate').desc(nulls_last=True))
 
         front_page_contents[gallery_name] = {
             "gallery_link": "/{}/{}".format( main_username, gallery_urlname )
