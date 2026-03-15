@@ -12,6 +12,7 @@ WORK_TYPES = [("WRI", "Writing"),
               ("AUD", "Audio")] # More in the future: Conversation, link?
 
 DOC_TYPES = [("IMG", "Image"),
+             ("THU", "Thumbnail"),
              ("AUD", "Audio"),
              ("MOV", "Movie")]
 
@@ -82,10 +83,18 @@ class Work(models.Model):
 # hmmm.
 
 
-def user_directory_path(self, filename):
+def user_directory_path(instance, filename):
     # file will be uploaded to MEDIA_ROOT/<username>/<year>/<month>/<filename>
+
+    # Note that this gets called again each time we save the Document, which can
+    # lead to the filename eventually becoming like
+    # uploads/name/2026/3/uploads/name/2026/3/uploads/name/2026/3/20230930_090636__o2lRCxl.jpg>...
+    # the following check is to avoid this - don't prepend again if we already did once
+    if "uploads/" in filename:
+        return filename
+    
     date = datetime.date.today()
-    return 'uploads/{0}/{1}/{2}/{3}'.format(self.owner.publicName, date.year,
+    return 'uploads/{0}/{1}/{2}/{3}'.format(instance.owner.publicName, date.year,
                                             date.month, filename)
 
 class Document(models.Model):

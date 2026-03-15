@@ -21,6 +21,9 @@
 <p>
   <input type="checkbox" class="img_select_checkbox" id="{{doc.id}}">
   <img src="{{doc.url}}" width="200px">
+  {% if doc.date %}
+  {{ doc.date }}
+  {% endif %}
 </p>
 <!-- TODO: Default to having all images checked that were part of most recent upload -->
   {% endfor %}

@@ -205,8 +205,8 @@ def make_thumbnail(src_document):
         buffer.seek(0)
 
         thumb_doc = Document(
-            filetype='IMG',
-            owner = src_document.owner
+            filetype='THU',
+            owner = src_document.owner,
         )
         thumb_doc.docfile.save(thumb_filename, ContentFile(buffer.read()), save=True)
 
@@ -555,10 +555,11 @@ def create_work_helper(
                                   title = title,
                                   workType = workType,
                                   body = body,
+                                  publicity = publicity,
                                   modifyDate = datetime.datetime.now(),
                                   publishDate = datetime.datetime.now(),
                                   sequenceNum = seq_num)
-    # TODO have the work get its happenedDate from the document's happened_at field.
+    # happend_at field will be inherited from documents 
     return newwork
 
 
@@ -587,17 +588,12 @@ def associate_documents_to_work(work):
 
     matches = re.findall(r'\{\{\s*(\d+)\s*\}\}', work.body)
     doc_ids = [int(m) for m in matches]
-    print("Doc ids found in work body text as placeholders:")
-    print(doc_ids)
 
     existing_docs = work.documents.all()
     existing_doc_ids = [ doc.id for doc in existing_docs ]
-    print("Doc ids already associated with this work:")
-    print(existing_doc_ids)
 
     for doc_id in doc_ids:
         if not doc_id in existing_doc_ids:
-            print("Associating with {}".format(doc_id))
             document = Document.objects.get( id = doc_id )
             work.documents.add(document)
 
@@ -857,10 +853,16 @@ def list_unused_docs(request):
         return redirect("/")
     # FieldFile object is not subscriptable...
     unused_docs = Document.objects.exclude(docfile__isnull = True)\
-        .filter(filetype = 'IMG', works = None, owner = person)\
+        .filter(filetype = 'IMG', owner = person)\
         .order_by('-uploaded_at') # most recent first
+    # Thumbnails will not be shown here because they have filetype THU.
+    # Show only the docs that are not in any works:
+    unused_docs = [x for x in unused_docs if x.works.count() == 0]
 
-    docs = [ {"url": doc.docfile.url, "id": doc.id} for doc in unused_docs if doc.docfile is not None and doc.docfile.name != '']
+    docs = [ {"url": doc.docfile.url,
+              "id": doc.id,
+              "date": doc.happened_at
+              } for doc in unused_docs if doc.docfile is not None and doc.docfile.name != '']
     # There's at least one Document that doesn't have a valid file... it has a .docfile object but
     # trying to access .docfile.url throws an exception. We can recognize that one by it having "" for name
 
@@ -920,6 +922,7 @@ def unused_doc_page_submission(request):
             title = new_title,
             workType = "WRI",
             gallery = gallery,
+            publicity = "PRI" # you can publicize it later when it's done
         )
 
         # TODO: set publicity to the new 'with key' mode, and generate a key.
@@ -941,17 +944,20 @@ def unused_doc_page_submission(request):
                 # no body, no title
                 workType = "PIC",
                 gallery = gallery,
+                publicity = gallery.publicity # If it's a public gallery make public etc.
                 # create_work_helper handles sequence_num
             )
             # TODO: set publicity to the new 'with key' mode, and generate a key.
             doc.works.add(work)
+            doc.save()
             # associate_documents_to_work will set thumbnail
             associate_documents_to_work(work)
-            doc.save()
             work.save()
 
-    # If we got here, then redirect to the EDIT gallery page.
-    return redirect("/%s/%s/edit" % (person.publicName, gallery.urlname) )
+        if what_to_create == "new-gallery":
+            return redirect("/%s/%s/edit" % (person.publicName, gallery.urlname) )
+        else:
+            return redirect("/%s/%s" % (person.publicName, gallery.urlname) )
     
 
 def debug_request(request):

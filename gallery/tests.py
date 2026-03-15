@@ -580,3 +580,9 @@ class GalleryTestCase(TestCase):
 #     - select some and save as "new work with all these images"
 #   - the new work(s) and/or gallery should be created. Those images should no longer appear
 #     as unused images.
+#   - the new work should get its "happend_at" field set to the date in the filename of the photo
+#
+#   - when we add new works to a gallery in this way they should inherit the publicity setting
+#     of the gallery.
+#   - gallery should sort by the happened_at date
+#   - most recently happend_at thumbnail should show on the frontpage
