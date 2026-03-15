@@ -27,7 +27,7 @@ gallery by {{person.publicName}}</h2>
 
 
 <div id="works-list">
-    {% for preview in works %}
+  {% for preview in works %}
     <div class="gallery-preview">
       <a href="{{preview.url}}">
 	{% if preview.thumbnail %}
@@ -43,8 +43,7 @@ gallery by {{person.publicName}}</h2>
 	  </p>
       </a>
     </div>
-
-    {% endfor %}
+  {% endfor %}
 </div>
 <br clear="all">
 {% endblock %}

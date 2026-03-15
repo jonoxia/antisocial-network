@@ -13,7 +13,9 @@ class EditGalleryForm(forms.Form):
 
 class EditWorkForm(forms.Form):
     title = forms.CharField(required=False) # title is optional for works
-    body = forms.CharField(widget = forms.Textarea(attrs={'style': 'border-color: orange', 'cols': 80, 'rows': 100}))
+    body = forms.CharField(
+        required=False,
+        widget = forms.Textarea(attrs={'style': 'border-color: orange', 'cols': 80, 'rows': 100}))
     publicity = forms.ChoiceField(choices = PRIVACY_SETTINGS, initial="PRI")
     tags = forms.CharField(required=False)
 

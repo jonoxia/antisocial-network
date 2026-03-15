@@ -117,19 +117,40 @@ def get_date_from_exif(image):
 
 def get_date_from_filename(filename):
     just_filename = filename.split("/")[-1]
+    print("Trying to parse {}".format(just_filename))
     try:
         # Style of filename "20251227_114106.jpg"
         date_part = just_filename.split("_")[0]
         return datetime.datetime.strptime(date_part, "%Y%m%d")
     except ValueError:
+        pass
+    
+    try:
         # Style of filename "apr_14.jpg"
         prefix_part = just_filename.split(".")[0]
         first_2_parts = "_".join(prefix_part.split("_")[:2])
         print("filename is {}".format(just_filename))
         print("good part of filename is {}".format(first_2_parts))
         dt = datetime.datetime.strptime(first_2_parts, "%b_%d")
+        print("Parsed out {} from {}".format(dt, just_filename))
         return datetime.datetime(year = 2025, month=dt.month, day=dt.day)
+    except ValueError:
+        pass
+    print("Trying 3rd approach")
 
+    try:
+        # Style of filename "apr_14xxx.jpg" or "xxx_apr_14.jpg"
+        m = re.search(r'([A-Za-z]{3}_\d{1,2})', just_filename)
+        if m:
+            result = m.group(1)
+            dt = datetime.datetime.strptime(result, "%b_%d")
+            print("Parsed out {} from {}".format(dt, just_filename))
+            return datetime.datetime(year = 2025, month=dt.month, day=dt.day)
+    except ValueError:
+        pass
+
+    print("Give up on parsing date from {}".format(filename))
+    return None
 
 def compress_image(document):
     # If document.docfile is an image that is wider than MAX_IMG_WIDTH, scale it down
@@ -728,6 +749,8 @@ def edit_work(request, personName, galleryUrlname, workUrlname):
         if form.is_valid():
             title = form.cleaned_data["title"]
             body = form.cleaned_data["body"]
+            if body is None:
+                body = "" # empty body text is allowed
             publicity = form.cleaned_data["publicity"]
 
             # TODO does changing a work's title change its URLname as well?
