@@ -25,15 +25,28 @@ gallery by {{person.publicName}}</h2>
 {% endautoescape %}
 </p>
 
+
 <div id="works-list">
-  <ul class="{{ gallery.theme }} columns-4">
     {% for preview in works %}
-      {% autoescape off %}
-        {{ preview }}
-      {% endautoescape %}
+    <div class="gallery-preview">
+      <a href="{{preview.url}}">
+	{% if preview.thumbnail %}
+	<p>
+          <img src="{{preview.thumbnail}}">
+	  </p>
+	{% endif %}
+	<h2>
+	{{ preview.title }}
+	</h2>
+	<p>
+	  {{ preview.date }}
+	  </p>
+      </a>
+    </div>
+
     {% endfor %}
-  </ul>
 </div>
+<br clear="all">
 {% endblock %}
 
 {% block sidebar %}

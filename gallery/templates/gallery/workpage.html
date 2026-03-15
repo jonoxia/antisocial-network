@@ -37,7 +37,7 @@
     <div id="work-body">
       {% if documents %}
          {% for document in documents %}
-             {% if document.filetype == "IMG" %}
+             {% if document.filetype == "IMG" or document.filetype == "THU" %}
                {% if gallery.theme == "comic" %}
                {% if nextWork %}
                  <a href="/{{person.publicName}}/{{gallery.urlname}}/{{nextWork.urlname}}">

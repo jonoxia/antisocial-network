@@ -275,6 +275,7 @@ def person_page(request, personName):
 
 def gallery_link_for_work(work, gallery_theme = None):
     # TODO make this a method of the Work model?
+    # Return object with fields
     # TODO return an HTML snippet (made from pre-rendering a template?) or
     #  return an object with fields that render into the gallery template? hmmm.
     # choose a template based on the work's type and the gallery theme?
@@ -283,17 +284,19 @@ def gallery_link_for_work(work, gallery_theme = None):
                               work.gallery.urlname,
                               work.urlname)
     if work.happenedDate is not None:
-        happened_date_str = "( {} )".format( work.happenedDate )
+        happened_date_str = "( {} )".format( work.happenedDate.strftime("%b %d, %Y"))
     else:
         happened_date_str = ""
 
+    ret_dict = {
+        "url": work_url,
+        "title": work.title,
+        "date": happened_date_str
+    }
     # Thumbnail URL if available:
     if work.thumbnail is not None:
-        thumbnailUrl = work.thumbnail.docfile.url
-        return '<li><a href="%s"><img src="%s"></a><p>%s</p> %s</li> ' % (work_url, thumbnailUrl, work.title, happened_date_str)
-    else:
-        return '<li><a href="%s">%s</a> %s</li>' % (work_url, work.title, happened_date_str)
-
+        ret_dict["thumbnail"] = work.thumbnail.docfile.url
+    return ret_dict
 
 def gallery_page(request, personName, galleryUrlname):
 
@@ -322,6 +325,9 @@ def gallery_page(request, personName, galleryUrlname):
         F('happenedDate').desc(nulls_last=True),
         F('sequenceNum').desc(nulls_last=True)
     )
+    # TODO: hide private works; show friend-only works only if you have the right
+    # key for them.
+    
     # was "-sequenceNum"
     #if gallery.theme == "blog":
     #    # was showing only writings when theme was blog - is this a thing we still want?
