@@ -9,7 +9,8 @@ def notify_subscribers(work):
     if work.gallery.publicity == "PRI":
         return
     # TODO this replicates some code from gallery_link_for_work
-    link = "/%s/%s/%s" % (
+    link = "%s/%s/%s/%s" % (
+            settings.URLBASE,
             work.gallery.author.publicName,
             work.gallery.urlname,
             work.urlname
@@ -17,7 +18,7 @@ def notify_subscribers(work):
 
     if work.gallery.publicity == "FRO":
         key = work.gallery.secret_key.key_string
-        link = settings.URLBASE + link + "?invite=%s" % key
+        link = link + "?invite=%s" % key
 
     print("Sending link %s", link)
     notification_list = []
