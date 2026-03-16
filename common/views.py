@@ -46,6 +46,8 @@ def index_page(request):
             post = latest_addition[0]
             link =  "/{}/{}/{}".format( main_username, post.gallery.urlname, post.urlname)
             img = post.thumbnail.docfile.url if post.thumbnail is not None else None
+            # Maybe put a placeholder thumbnail for writings and for music
+            # if the most recent post there doesn't have its own thumbnail
             front_page_contents[gallery_name].update({
                 "title": post.title,
                 "img": img,

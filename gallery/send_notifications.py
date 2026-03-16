@@ -25,12 +25,16 @@ def notify_subscribers(work):
         interests__in = work.tags.all() # Is that a valid way to filter?
     )
     print("To subscribers...")
-    # Debug this by printing something like 'sending link x to (list of emial addresses"
+    print(",".join( [x.subscriber_name for x in subscribers.all()] ))
 
     already_notified = [s.subscriber for s in SubscriberBeenNotified.objects.filter(work = work)]
-
+    print("Excluding already notified...")
+    print(",".join( [x.subscriber_name for x in already_notified] ))
+    
     for s in subscribers:
+        print("... send to %s (%s)??" % (s.email, s.phone))
         if s in already_notified:
+            print("No, already notified, skipping.")
             continue
         if s.contact_method == "EML":
             send_to_email(link, s.email, work)
@@ -40,10 +44,11 @@ def notify_subscribers(work):
             # Probably this will be done on the phone, not here.
             # In this case, don't create a SubscriberBeenNotified.
             continue
-        print("... to %s (%s)" % (s.email, s.phone))
+        print("... Sent to %s (%s)!" % (s.email, s.phone))
 
         # if email or discord sent, mark notification so we won't send again if post
         # is edited or whatever.
+        print("Creating subscriberBeenNotified for {}, {}".format(s.email, w.urlname))
         SubscriberBeenNotified.objects.create(
             subscriber = s,
             work = work,
