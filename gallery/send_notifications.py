@@ -23,7 +23,10 @@ def notify_subscribers(work):
     notification_list = []
     subscribers = Subscriber.objects.filter(
         interests__in = work.tags.all() # Is that a valid way to filter?
-    )
+    ).distinct()
+    # Without the .distinct(), this can get multiple copies of the same
+    # subscriber, which we don't want.
+    
     print("To subscribers...")
     print(",".join( [x.subscriber_name for x in subscribers.all()] ))
 
