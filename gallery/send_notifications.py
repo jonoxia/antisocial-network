@@ -51,7 +51,7 @@ def notify_subscribers(work):
 
         # if email or discord sent, mark notification so we won't send again if post
         # is edited or whatever.
-        print("Creating subscriberBeenNotified for {}, {}".format(s.email, w.urlname))
+        print("Creating subscriberBeenNotified for {}, {}".format(s.email, work.urlname))
         SubscriberBeenNotified.objects.create(
             subscriber = s,
             work = work,
