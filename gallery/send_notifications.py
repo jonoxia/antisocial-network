@@ -90,15 +90,15 @@ def send_to_email(link, email_addr, work):
         """.format(title, link)
     print(text_body)
     print(html_body)
-    #email = EmailMultiAlternatives(
-    #    subject='New post on nindokag.blog',
-    #    body=text_body,
-    #    from_email='noreply@nindokag.blog',
-    #    to=[email_addr],
-    #)
+    email = EmailMultiAlternatives(
+        subject='New post on nindokag.blog',
+        body=text_body,
+        from_email='noreply@nindokag.blog',
+        to=[email_addr],
+    )
     # Is there a way to use Django's templating in the HTML aternative?
-    #email.attach_alternative(html_body, 'text/html')
-    #email.send()
+    email.attach_alternative(html_body, 'text/html')
+    email.send()
     
 
 
