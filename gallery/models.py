@@ -50,8 +50,6 @@ class Gallery(models.Model):
                                  choices=PRIVACY_SETTINGS,
                                  default="PRI")
     # a unique-together constraint of author + title?
-    secret_key = models.ForeignKey(SecretKey, null=True, on_delete=models.CASCADE)
-    # secret_key is only used if publicity="FRO"
     class Meta:
         unique_together = ('author', 'urlname')
 
@@ -118,31 +116,41 @@ class Tag(models.Model):
 # new work created with tag -> send work link with parent gallery's invite key to to matching subscribers
 
 class Conversation(models.Model):
+    # Currently unused
     title = models.TextField()
     topic = models.ForeignKey(Work, null=True, on_delete=models.CASCADE)
     mode = models.TextField()
     startDate = models.DateTimeField()
 
 class Comment(models.Model):
+    # Currently unused
     person = models.ForeignKey(Human, null=False, on_delete=models.CASCADE)
     conversation = models.ForeignKey(Conversation, null=False, on_delete=models.CASCADE)
     when = models.DateTimeField()
     commentText = models.TextField()
 
 class PublicitySetting(models.Model):
+    # Currently unused
     person = models.ForeignKey(Human, null=False, on_delete=models.CASCADE)
     conversation = models.ForeignKey(Conversation, null=False, on_delete=models.CASCADE)
     setting = models.IntegerField() # 
 
 class GalleryCollab(models.Model):
     # For sharing ownership of a gallery, attach a few of these
+    # Currently unused, might deprecate.
     person = models.ForeignKey(Human, null=False, on_delete=models.CASCADE)
     gallery = models.ForeignKey(Gallery, null=False, on_delete=models.CASCADE)
     permissions = models.IntegerField() # what values could this have?
     publicity = models.CharField(max_length=3,
                                  choices=PRIVACY_SETTINGS,
                                  default="PRI")
+
+class GalleryPermission(models.Model):
+    person = models.ForeignKey(Human, null=False, on_delete=models.CASCADE)
+    gallery = models.ForeignKey(Gallery, null=False, on_delete=models.CASCADE)
+    level = models.IntegerField(default=1) # Reserved for future use
     
+
 class Subscriber(models.Model):
     person = models.ForeignKey(Human, null=False, on_delete=models.CASCADE)
     subscriber_name = models.TextField()
@@ -156,6 +164,10 @@ class Subscriber(models.Model):
     # what tags do they listen for? Notify this subscriber by their preferred
     # contact method whenever i make a new post with one of their tags of interest
     interests = models.ManyToManyField(Tag, related_name="subscribers")
+    # Secret key is used for a one-time login
+    secret_key = models.ForeignKey(SecretKey, null=True, on_delete=models.CASCADE)
+    # Invalidate or change after a single sign-in so it can't be accidentally
+    # given to others?
 
 
 # Record when a subscriber has been notified of a post already, so we don't
