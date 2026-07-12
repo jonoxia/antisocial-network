@@ -7,6 +7,7 @@ from django.core.files.base import ContentFile
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_exempt
 from django.db.models import F
+from django.contrib.auth import login
 
 from io import BytesIO
 import markdown
@@ -236,7 +237,6 @@ def make_thumbnail(src_document):
 
 def get_invite(request):
     # reads key from the "invite" field, either in the url params or the session cookie.
-    # TODO: this implementation means you can only have one invite at a time... ponder.
     key = request.GET.get("invite", None)
     if key is not None:
         return key
@@ -244,16 +244,20 @@ def get_invite(request):
     return key
 
 def get_allowed_galleries(request, person):
-    # return list of galleries that are either public or that match your invite key
-    invite = get_invite(request)
+    # return list of (person's) galleries that are either public or that match your invite key
+    #invite = get_invite(request)
     public_ones = Gallery.objects.filter(
         author = person,
         publicity = "PUB")
-    friend_ones = Gallery.objects.filter(
+
+    # TODO: optimize django query performance using prefetch_related
+    perms = GalleryPermission.objects.filter(
+        human__account == request.user).all()
+    friend_only = Gallery.objects.filter(
         author = person,
         publicity = "FRO",
-        secret_key__key_string = invite
-    )
+    ).all()
+    permitted_ones = [x.gallery for x in perms if x.gallery in friend_only]
 
     if request.user == person.account:
         mine = Gallery.objects.filter(
@@ -261,18 +265,27 @@ def get_allowed_galleries(request, person):
         )
     else:
         mine = []
-    return list( chain( public_ones, friend_ones, mine ))
+    return list( chain( public_ones, permitted_ones, mine ))
 
 
 def gallery_is_allowed(request, gallery):
-    invite = get_invite(request)
+    #invite = get_invite(request)
+
+    # I can always see my own galleries:
+    if request.user == gallery.author.account:
+        return True
     # if i'm not the creator, then if it's private, i can't see it
     if gallery.publicity == "PRI":
-        return request.user == gallery.author.account
+        return False
     # if i'm not the creator and it's friends-only, then check for invite:
     if gallery.publicity == "FRO":
-        if invite is None or invite != gallery.secret_key.key_string:
-            return request.user == gallery.author.account
+        if GalleryPermission.objects.filter(
+                person__account = request.user,
+                gallery = gallery).count() > 0:
+            return True
+        else:
+            return False
+
     return True
 
 
@@ -331,13 +344,15 @@ def gallery_page(request, personName, galleryUrlname):
     if len(matches) == 0:
         return render(request, 'gallery/404.html', {})
 
+    logged_in_user = check_for_secret_key_login(request)
+
     gallery = matches[0]
     if not gallery_is_allowed(request, gallery):
         return redirect("/%s" % (personName) )
 
     data = {"person": person, "gallery": gallery}
     data["blurb"] = markdown.markdown(gallery.blurb)
-    if request.user == person.account:
+    if logged_in_user == person.account:
         data["editable"] = True
     else:
         data["editable"] = False
@@ -357,10 +372,10 @@ def gallery_page(request, personName, galleryUrlname):
     data["othergalleries"] = get_allowed_galleries(request, person)
     data["viewer"] = get_viewer(request)
 
-    invite = get_invite(request)
-    if invite is not None:
-        # If you came here with an invite link, store that in your session cookie
-        request.session["invite"] = invite
+    #invite = get_invite(request)
+    #if invite is not None:
+    #    # If you came here with an invite link, store that in your session cookie
+    #    request.session["invite"] = invite
     return render(request, 'gallery/gallerypage.html', data)
 
 
@@ -373,9 +388,14 @@ def work_page(request, personName, galleryUrlname, workUrlname):
 
     work = matches[0]
 
+    # TODO: If the user is not logged in, and the request comes with an
+    # invite code param, use that to log in the user right now, before checking
+    # whether gallery is allowed.
+    logged_in_user = check_for_secret_key_login(request)
+
     matches = Human.objects.filter(publicName = personName)
     person = matches[0]
-    mine = (request.user == person.account)
+    mine = (logged_in_user == person.account)
 
     if not gallery_is_allowed(request, work.gallery):
         return redirect("/%s" % (personName) )
@@ -493,9 +513,6 @@ def new_gallery(request, personName):
                                                  title = title,
                                                  blurb = blurb,
                                                  publicity = publicity)
-
-                if publicity == "FRO":
-                    generate_key_for_gallery(gallery)
                 
                 return redirect("/%s/%s" % (personName, urlname))
     else:
@@ -541,8 +558,6 @@ def edit_gallery(request, personName, galleryUrlname):
             gallery.blurb = blurb
         publicity = request.POST.get("publicity", None)
         if publicity is not None:
-            if publicity == "FRO" and gallery.publicity != "FRO":
-                generate_key_for_gallery(gallery)
             gallery.publicity = publicity
         gallery.save()
         if errorMsg == "":
@@ -601,8 +616,6 @@ def set_tags_on_work(work, tags_string):
         tag.works.add(work)
         tag.save()
     work.save()
-
-    notify_subscribers(work)
 
 
 def associate_documents_to_work(work):
@@ -696,8 +709,11 @@ def new_work(request, personName, galleryUrlname):
             # there's not already one.
             associate_documents_to_work(newwork)
 
-            # Set tags on work (May trigger send to subscribers)
+            # Set tags on work
             set_tags_on_work(newwork, work_form.cleaned_data["tags"])
+
+            # Check if subscribers should be notified:
+            notify_subscribers(work)
             
             # If the "add another" checkbox is checked, then redirect to a new work form.
             # otherwise, redirect to the work page for the newly uploaded work.
@@ -767,8 +783,11 @@ def edit_work(request, personName, galleryUrlname, workUrlname):
             # doc placeholders in its body text:
             associate_documents_to_work(work)
 
-            # Set tags on work (May trigger send to subscribers):
+            # Set tags on work:
             set_tags_on_work(work, form.cleaned_data["tags"])
+
+            # Check if subscribers should be notified:
+            notify_subscribers(work)
 
             # Redirect to the work page for the edited work:
             return redirect("/%s/%s/%s" % (personName, galleryUrlname, work.urlname) )
@@ -1075,6 +1094,7 @@ def multi_upload(request, personName):
 
 
 def generate_key_for_gallery(gallery):
+    # Deprecated
     # call this when we create a gallery with publicity=FRO or change a gallery's
     # publicity to FRO.
     if gallery.secret_key is None:
@@ -1088,3 +1108,33 @@ def generate_key_for_gallery(gallery):
         gallery.save()
     # Currently if gallery already has a key we do nothing here. But we could
     # also invalidate the old key and replace it with a new one? What's better?
+
+def invalidate_secret_key(subscriber):
+    # TODO what if something goes wrong with the page load and then your
+    # key is invalidated??? that would suck. can we wait until we've
+    # verified that you're in?
+    secret_key_obj = subscriber.secret_key
+    subscriber.secret_key = None
+    subscriber.save()
+    secret_key_obj.delete()
+
+
+def check_for_secret_key_login(request):
+    # If the user is not logged in, and the request comes with an
+    # invite code param, use that to log in the user right now, before checking
+    # whether gallery is allowed.
+    invite = get_invite(request)
+    if invite is not None:
+        matches = Subscriber.objects.filter(secret_key__key_string)
+        if matches.count() > 0:
+            sub = matches[0]
+            user = sub.person.account
+            # Does login (below) work correctly without user.authenticate first?
+            login(request, user)
+
+            # Invalidate the code after it's used once:
+            invalidate_secret_key(sub)
+            return user
+
+    return request.user
+

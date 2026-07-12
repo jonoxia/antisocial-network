@@ -128,16 +128,7 @@ class Command(BaseCommand):
             sub.save() # is raising error...
 
         infile.close()
-        #login(request, user)
 
             
-# Changes to make:
-# When we land on any page, if there is a secret key in the URL, check it against
-# the secret keys for all subscribers to find my subscriber, and log me in as that
-# subscriber's human's user. Save login cookie. Then invalidate the key. Then check
-# if i have permission to the gallery.
 
-# when i go to a friends-only gallery, check whether i'm a human with permission to
-# that gallery, instead of checking for a secret key to the gallery
 
-# Create a reset-password link?

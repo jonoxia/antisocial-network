@@ -1,8 +1,32 @@
 import requests
 from django.core.mail import EmailMultiAlternatives
-from gallery.models import Work, Tag, Subscriber, SubscriberBeenNotified
+from gallery.models import Work, Tag, Subscriber, SubscriberBeenNotified, SecretKey, Gallery
 import datetime
 from django.conf import settings
+
+
+def generate_key_for_subscriber(subscriber):
+    now = datetime.datetime.now()
+
+    if subscriber.secret_key is not None:
+        subscriber.secret_key.delete()
+    
+    new_key = SecretKey.objects.create(
+        key_string = uuid.uuid1(),
+        created_at = now,
+        invalidate_at = now + datetime.timedelta(days=30)
+    )
+    subscriber.secret_key = new_key
+    subscriber.save()
+
+def get_subscribers_for_tags(work):
+    # Not currently used
+    subscribers = Subscriber.objects.filter(
+        interests__in = work.tags.all() # Is that a valid way to filter?
+    ).distinct()
+    # Without the .distinct(), this can get multiple copies of the same
+    # subscriber, which we don't want.
+    return subscribers
 
 def notify_subscribers(work):
     # Send notifications to subscribers here.
@@ -16,17 +40,16 @@ def notify_subscribers(work):
             work.urlname
         )
 
-    if work.gallery.publicity == "FRO":
-        key = work.gallery.secret_key.key_string
-        link = link + "?invite=%s" % key
-
     print("Sending link %s", link)
     notification_list = []
+
+    # For now, the subscribers to notify are all of those with permissions to the
+    # gallery. In the future, we may use interest-tags for this.
+    permissions = GalleryPermission.objects.filter(
+        gallery = work.gallery)
     subscribers = Subscriber.objects.filter(
-        interests__in = work.tags.all() # Is that a valid way to filter?
+        human__in = [p.person for p in permissions]
     ).distinct()
-    # Without the .distinct(), this can get multiple copies of the same
-    # subscriber, which we don't want.
     
     print("To subscribers...")
     print(",".join( [x.subscriber_name for x in subscribers.all()] ))
@@ -40,10 +63,17 @@ def notify_subscribers(work):
         if s in already_notified:
             print("No, already notified, skipping.")
             continue
+
+        if work.gallery.publicity == "FRO":
+            generate_key_for_subscriber(subscriber)
+            customized_link = link + "?invite=%s" % key
+        else:
+            customized_link = link
+        
         if s.contact_method == "EML":
-            send_to_email(link, s.email, work)
+            send_to_email(customized_link, s.email, work)
         elif s.contact_method == "DIS":
-            send_to_discord_channel(link, s.url, work)
+            send_to_discord_channel(customized_link, s.url, work)
         elif s.contact_method == "SMS":
             # Probably this will be done on the phone, not here.
             # In this case, don't create a SubscriberBeenNotified.
