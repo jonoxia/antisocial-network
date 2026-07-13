@@ -1,7 +1,16 @@
 import requests
 from django.core.mail import EmailMultiAlternatives
-from gallery.models import Work, Tag, Subscriber, SubscriberBeenNotified, SecretKey, Gallery
+from gallery.models import (
+    Work,
+    Tag,
+    Subscriber,
+    SubscriberBeenNotified,
+    SecretKey,
+    Gallery,
+    GalleryPermission
+)
 import datetime
+import uuid
 from django.conf import settings
 
 
@@ -18,6 +27,7 @@ def generate_key_for_subscriber(subscriber):
     )
     subscriber.secret_key = new_key
     subscriber.save()
+    return new_key
 
 def get_subscribers_for_tags(work):
     # Not currently used
@@ -48,7 +58,7 @@ def notify_subscribers(work):
     permissions = GalleryPermission.objects.filter(
         gallery = work.gallery)
     subscribers = Subscriber.objects.filter(
-        human__in = [p.person for p in permissions]
+        person__in = [p.person for p in permissions]
     ).distinct()
     
     print("To subscribers...")
@@ -65,8 +75,8 @@ def notify_subscribers(work):
             continue
 
         if work.gallery.publicity == "FRO":
-            generate_key_for_subscriber(subscriber)
-            customized_link = link + "?invite=%s" % key
+            key = generate_key_for_subscriber(s)
+            customized_link = link + "?invite=%s" % key.key_string
         else:
             customized_link = link
         

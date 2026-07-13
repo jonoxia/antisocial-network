@@ -1,4 +1,5 @@
 from django.contrib.auth import login
+from django.core.files.base import ContentFile
 from io import BytesIO
 import datetime
 import re
@@ -404,7 +405,7 @@ def check_for_secret_key_login(request):
     # whether gallery is allowed.
     invite = get_invite(request)
     if invite is not None:
-        matches = Subscriber.objects.filter(secret_key__key_string)
+        matches = Subscriber.objects.filter(secret_key__key_string = invite)
         if matches.count() > 0:
             sub = matches[0]
             user = sub.person.account

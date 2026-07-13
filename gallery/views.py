@@ -3,7 +3,6 @@ from django.http import HttpResponse
 from django.http import JsonResponse
 from django.shortcuts import redirect
 from django.conf import settings
-from django.core.files.base import ContentFile
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_exempt
 from django.db.models import F
@@ -372,7 +371,7 @@ def new_work(request, personName, galleryUrlname):
             set_tags_on_work(newwork, work_form.cleaned_data["tags"])
 
             # Check if subscribers should be notified:
-            notify_subscribers(work)
+            notify_subscribers(newwork)
             
             # If the "add another" checkbox is checked, then redirect to a new work form.
             # otherwise, redirect to the work page for the newly uploaded work.
