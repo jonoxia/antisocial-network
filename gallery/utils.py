@@ -149,6 +149,21 @@ def get_date_from_filename(filename):
     print("Give up on parsing date from {}".format(filename))
     return None
 
+def get_page_num_from_filename(filename):
+    # because sometimes i upload files that have 'page_x' in the filename and that's
+    # useful information for gallery ordering that I don't want to throw away
+    just_filename = filename.split("/")[-1]
+    m = re.search(r'(page_\d{1,2})', just_filename)
+    if m:
+        result = m.group(1)
+        # Zero-pad single-digit numbers here, so page_1 becomes Page 01 so they go in
+        # the correct order when sorted alphabetically:
+        if len(result) == 6:
+            return result.replace("_", " 0")
+        else:
+            return result.replace("_", " ")
+    return None
+
 def compress_image(document):
     # If document.docfile is an image that is wider than MAX_IMG_WIDTH, scale it down
     # to that size, and save it as web-quality JPEG using PIL.
@@ -216,10 +231,13 @@ def make_thumbnail(src_document):
         wpercent = THUMBNAIL_WIDTH/float(img.width)
         hsize = int((float(img.height)*float(wpercent)))
     
-        img.thumbnail((THUMBNAIL_WIDTH, hsize), Image.LANCZOS) # does lanczos work here?
+        img.thumbnail((THUMBNAIL_WIDTH, hsize), Image.LANCZOS) # does lanczos work here? Yes
         thumb_filename = filename + "_thumb.jpg"
         buffer = BytesIO()
-        img.save(buffer, format="JPEG")
+        # If the initial image was RGBA - i.e. it had an alpha channel like a transparent png
+        # we'll get an error trying to save that alpha channel into JPEG.
+        rgb_img = img.convert('RGB') # gets rid of alpha channel if it was present
+        rgb_img.save(buffer, format="JPEG")
         buffer.seek(0)
 
         thumb_doc = Document(

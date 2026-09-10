@@ -25,9 +25,9 @@ from gallery.utils import (
     create_work_helper,
     set_tags_on_work,
     associate_documents_to_work,
-    check_for_secret_key_login
+    check_for_secret_key_login,
+    get_page_num_from_filename
 )
-
 
 
 def person_page(request, personName):
@@ -98,17 +98,21 @@ def gallery_page(request, personName, galleryUrlname):
     else:
         data["editable"] = False
 
-    works = Work.objects.filter(gallery = gallery).order_by(
-        F('happenedDate').desc(nulls_last=True),
-        F('sequenceNum').desc(nulls_last=True)
-    )
+    works = Work.objects.filter(gallery = gallery)
+    # check per-gallery sort-order setting:
+    # that is, either 'happenedDate', 'sequenceNum', 'title', reverse_happenedDate, maybe reverse_title...
+    if gallery.sort_order == 'SEQ':
+        works = works.order_by(F('sequenceNum').asc(nulls_last=True))
+    elif gallery.sort_order == 'TTL':
+        works = works.order_by(F('title').asc(nulls_last=True))
+    elif gallery.sort_order == 'CRO':
+        works = works.order_by(F('happenedDate').asc(nulls_last=True))
+    elif gallery.sort_order == 'REV':
+        works = works.order_by(F('happenedDate').desc(nulls_last=True))
     # TODO: hide private works; show friend-only works only if you have the right
     # key for them.
     
     # was "-sequenceNum"
-    #if gallery.theme == "blog":
-    #    # was showing only writings when theme was blog - is this a thing we still want?
-    #    works = works.filter(workType = "WRI")
     data["works"] = [gallery_link_for_work(w, gallery.theme) for w in works]
     data["othergalleries"] = get_allowed_galleries(request, person)
     data["viewer"] = get_viewer(request)
@@ -243,6 +247,7 @@ def new_gallery(request, personName):
             title = form.cleaned_data["title"]
             blurb = form.cleaned_data["blurb"]
             publicity = form.cleaned_data["publicity"]
+            sort_order = form.cleaned_data["sort_order"]
             # Is there already a gallery with this title?
             matches = Gallery.objects.filter(author = person, title = title)
             if len(matches) > 0:
@@ -285,30 +290,37 @@ def edit_gallery(request, personName, galleryUrlname):
     if request.method == "POST":
         # Don't require all fields to be present, but update any
         # fields that are present:
-        title = request.POST.get("title", None)
-        if title is not None and title != gallery.title:
-            # See if title is already used:
-            matches = Gallery.objects.filter(author = person, title = title)
-            if len(matches) > 0:
-                errorMsg = "You already have a gallery called %s" % title
-            else:
-                gallery.title = title
-                gallery.urlname = make_url_name(title, [g.urlname for g in Gallery.objects.filter(author = person)])
-        blurb = request.POST.get("blurb", None)
-        if blurb is not None:
-            gallery.blurb = blurb
-        publicity = request.POST.get("publicity", None)
-        if publicity is not None:
-            gallery.publicity = publicity
-        gallery.save()
-        if errorMsg == "":
-            return redirect("/%s/%s" % (personName, gallery.urlname) )
+        # TODO simplify this using the EditGalleryForm
+        form = EditGalleryForm(request.POST)
+        if form.is_valid():
+            title = form.cleaned_data["title"]
+            if title is not None and title != gallery.title:
+                # See if title is already used:
+                matches = Gallery.objects.filter(author = person, title = title)
+                if len(matches) > 0:
+                    errorMsg = "You already have a gallery called %s" % title
+                else:
+                    gallery.title = title
+                    gallery.urlname = make_url_name(title, [g.urlname for g in Gallery.objects.filter(author = person)])
+            blurb = form.cleaned_data["blurb"]
+            if blurb is not None:
+                gallery.blurb = blurb
+            publicity = form.cleaned_data["publicity"]
+            if publicity is not None:
+                gallery.publicity = publicity
+            sort_order = form.cleaned_data["sort_order"]
+            if publicity is not None:
+                gallery.sort_order = sort_order
+            gallery.save()
+            if errorMsg == "":
+                return redirect("/%s/%s" % (personName, gallery.urlname) )
 
     # Perhaps we have a form field with an option of how to sort the gallery
 
     form = EditGalleryForm(initial = {"title": gallery.title,
                                       "blurb": gallery.blurb,
-                                      "publicity": gallery.publicity})
+                                      "publicity": gallery.publicity,
+                                      "sort_order": gallery.sort_order})
 
     data = {"person": person, "form": form, "errorMsg": errorMsg}
     return render(request, 'gallery/editgallery.html', data)
@@ -644,10 +656,18 @@ def unused_doc_page_submission(request):
         # create one work per document, type = 'img' probably.
         # Sort documents oldest to newest so that the oldest ones get the lowest sequence
         # number
-        documents = documents.order_by("happened_at")
+        documents = documents.order_by("happened_at") # Can i use filename as secondary ordering??
+
+        # the "happened_at" order may not be helpful for a batch all uploaded at the same time
+        # that don't have dates in their names. Maybe preserve the document names for the works?
+        # (might be good to add an 'original filename' field to Document for this)
+        # If we wanted to set sequence_num from (for example) page_x in filename, then we'd need
+        # to sort the documents by that first, then create in that order
         for doc in documents:
+            page_title = get_page_num_from_filename(doc.docfile.name)
             work = create_work_helper(
-                # no body, no title
+                # no body
+                title = page_title if page_title is not None else "",
                 workType = "PIC",
                 gallery = gallery,
                 publicity = gallery.publicity # If it's a public gallery make public etc.

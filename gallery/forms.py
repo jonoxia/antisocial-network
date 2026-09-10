@@ -1,5 +1,5 @@
 from django import forms
-from gallery.models import PRIVACY_SETTINGS, WORK_TYPES, DOC_TYPES
+from gallery.models import PRIVACY_SETTINGS, WORK_TYPES, DOC_TYPES, SORT_TYPES
 
 class EditProfileForm(forms.Form):
     bio = forms.CharField(widget = forms.Textarea())
@@ -8,6 +8,7 @@ class EditGalleryForm(forms.Form):
     title = forms.CharField()  # Required
     blurb = forms.CharField(widget = forms.Textarea(), required=False)
     publicity = forms.ChoiceField(choices = PRIVACY_SETTINGS)
+    sort_order = forms.ChoiceField(choices = SORT_TYPES)
     # type = forms.DropDownMenu()
     # theme = forms.DropDownMenu()
 

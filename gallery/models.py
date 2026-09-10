@@ -23,6 +23,12 @@ CONTACT_MODES = [("EML", "E-mail"),
 # we can also send all public posts to Bluesky but that's just one place so it
 # doesn't need further info.
 
+SORT_TYPES = [('SEQ', "Order Added"),
+              ('TTL', "Alphabetical by Title"),
+              ('CRO', "Chronological"),
+              ('REV', "Reverse Chronological")]
+# also support "reverse order added" ?
+
 class Human(models.Model):
     account = models.ForeignKey(User, null=False, on_delete=models.CASCADE)
     publicName = models.TextField()
@@ -44,8 +50,12 @@ class Gallery(models.Model):
     urlname = models.TextField(null=False) # used when referring to gallery in part of url
     title = models.TextField()
     blurb = models.TextField()
-    type = models.TextField()
-    theme = models.TextField()
+    type = models.TextField() # unused?
+    theme = models.TextField() # unused?
+    sort_order = models.CharField(max_length=3,
+                                  choices=SORT_TYPES,
+                                  default="SEQ")
+
     publicity = models.CharField(max_length=3,
                                  choices=PRIVACY_SETTINGS,
                                  default="PRI")
