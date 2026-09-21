@@ -62,7 +62,9 @@ def index_page(request):
 
     front_page_contents["longform"] = {
         "title": "The NPCs",
-        "img": "",
+        "img": "", # Todo set this to a hardcoded url of something from the unused document browser page?
+        # oh, or we could like... give gallery model a thumbnail field, nullable.
+        # Use gallery.thumbnail.docfile.url if available.
         # Change this link when we want to put a different gallery in the long-form spot:
         "link": "/nindokag/the-npcs-anthology-comic-2026/page-01",
         "gallery_link": "/nindokag/the-npcs-anthology-comic-2026"

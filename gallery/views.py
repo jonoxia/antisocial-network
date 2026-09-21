@@ -451,7 +451,7 @@ def edit_work(request, personName, galleryUrlname, workUrlname):
     work = Work.objects.get(gallery = gallery, urlname = workUrlname)
     
     if request.method == "POST":
-        form = EditWorkForm(request.POST)
+        form = EditWorkForm(request.POST, request.FILES)
         if form.is_valid():
             title = form.cleaned_data["title"]
             body = form.cleaned_data["body"]
@@ -467,6 +467,25 @@ def edit_work(request, personName, galleryUrlname, workUrlname):
             work.body = body
             work.publicity = publicity
             work.modifyDate = datetime.datetime.now()
+
+            # if happened_at isn't empty, parse date, set happened_at.
+            # if current thumbnail is null and thumbnail form field is filled in, proc
+            # the upload and set that as the thumbnail.
+            print(form.cleaned_data)
+            print(request.FILES)
+            if form.cleaned_data["happened_at"] is not None:
+                print("set happened_at to ", form.cleaned_data["happened_at"])
+                work.happenedDate = form.cleaned_data["happened_at"]
+            if request.FILES["thumbnail"] is not None and work.thumbnail is None:
+                thumbnail = Document.objects.create(
+                    docfile = request.FILES["thumbnail"],
+                    filetype = "THU",
+                    owner = person
+                )
+                compress_image(thumbnail)
+                # TODO a way to clear/remove thumbnail if we don't want it anymore?
+                work.thumbnail = thumbnail
+
             work.save()
 
             # Create associations between the work and any documents referenced by
@@ -489,7 +508,10 @@ def edit_work(request, personName, galleryUrlname, workUrlname):
             "title": work.title,
             "body": work.body,
             "publicity": work.publicity,
-            "tags": ", ".join([t.tagText for t in work.tags.all()])
+            "tags": ", ".join([t.tagText for t in work.tags.all()]),
+            "thumbnail": work.thumbnail.docfile if work.thumbnail else None,
+            "happened_at": work.happenedDate
+            # TODO thumbnail, happened_at
         })
         document_form = DocumentForm()
         data = {"person": person, "gallery": gallery, "work": work, "work_form": form,

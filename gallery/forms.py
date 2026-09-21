@@ -19,6 +19,12 @@ class EditWorkForm(forms.Form):
         widget = forms.Textarea(attrs={'style': 'border-color: orange', 'cols': 80, 'rows': 100}))
     publicity = forms.ChoiceField(choices = PRIVACY_SETTINGS, initial="PRI")
     tags = forms.CharField(required=False)
+    thumbnail = forms.FileField(
+        label = "Pick an image to be the thumbnail",
+        help_text = "",
+        required=False
+    )
+    happened_at = forms.DateField(required=False)
 
 class NewWorkForm(forms.Form):
     title = forms.CharField(required=False) # title is optional
