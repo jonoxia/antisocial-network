@@ -47,6 +47,11 @@ def index_page(request):
             post = latest_addition[0]
             link =  "/{}/{}/{}".format( main_username, post.gallery.urlname, post.urlname)
             img = post.thumbnail.docfile.url if post.thumbnail is not None else None
+            if img is None:
+                # Fallback placeholder thumbnail if no other thumbnail available:
+                # use author pic
+                img = post.gallery.author.portrait.docfile.url
+
             # Maybe put a placeholder thumbnail for writings and for music
             # if the most recent post there doesn't have its own thumbnail
             front_page_contents[gallery_name].update({
@@ -59,7 +64,8 @@ def index_page(request):
         "title": "The NPCs",
         "img": "",
         # Change this link when we want to put a different gallery in the long-form spot:
-        "link": "/nindokag/the-npcs-anthology-comic-2026"
+        "link": "/nindokag/the-npcs-anthology-comic-2026/page-01",
+        "gallery_link": "/nindokag/the-npcs-anthology-comic-2026"
     }
 
     return render(request, 'common/frontpage.html', front_page_contents)

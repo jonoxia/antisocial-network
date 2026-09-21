@@ -18,8 +18,8 @@
     <table width = "100%">
       <tr>
       <td width="30%" align="left">
-	<!-- <a href="">What's the deal with this website?</a><br> -->
-	<a href="/feed">RSS Feed</a>
+	<a href="/feed">RSS Feed</a><br>
+        <a href="/">Home</a>
       </td>
 
       <td width="40%">
@@ -33,9 +33,8 @@
 
       <td width="30%" align="right">
 	{% if viewer %}
-          <a href="/{{viewer.publicName}}">Home</a>&nbsp;
-          You are logged in as: {{viewer.publicName}}&nbsp;
-          <a href="/accounts/logout">Logout</a>
+          You are logged in as: <a href="/{{viewer.publicName}}">{{viewer.publicName}}</a>&nbsp;
+           <a href="/accounts/logout">Logout</a>&nbsp;
 	{% else %}
 	  <!--<a href="/">Login</a> &nbsp;&nbsp; <a href="/accounts/create">Sign Up</a> -->
 	{% endif %}
