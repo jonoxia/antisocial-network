@@ -489,7 +489,7 @@ def edit_work(request, personName, galleryUrlname, workUrlname):
             if form.cleaned_data["happened_at"] is not None:
                 print("set happened_at to ", form.cleaned_data["happened_at"])
                 work.happenedDate = form.cleaned_data["happened_at"]
-            if "thumbnail" in request.FILES and requet.FILES["thumbnail"] is not None and work.thumbnail is None:
+            if "thumbnail" in request.FILES and request.FILES["thumbnail"] is not None and work.thumbnail is None:
                 rawdoc = Document.objects.create(
                     docfile = request.FILES["thumbnail"],
                     filetype = "THU",
