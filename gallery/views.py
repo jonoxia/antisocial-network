@@ -350,12 +350,12 @@ def edit_gallery(request, personName, galleryUrlname):
                 return redirect("/%s/%s" % (personName, gallery.urlname) )
 
     # Perhaps we have a form field with an option of how to sort the gallery
-
+    thumbnail = gallery.thumbnail.docfile if gallery.thumbnail is not None else None
     form = EditGalleryForm(initial = {"title": gallery.title,
                                       "blurb": gallery.blurb,
                                       "publicity": gallery.publicity,
                                       "sort_order": gallery.sort_order,
-                                      "thumbnail": gallery.thumbnail.docfile})
+                                      "thumbnail": thumbnail})
 
     data = {"person": person, "form": form, "errorMsg": errorMsg}
     return render(request, 'gallery/editgallery.html', data)
