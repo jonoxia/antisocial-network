@@ -166,10 +166,28 @@ def work_page(request, personName, galleryUrlname, workUrlname):
     # If we're ordering by something other than sequence number, we have to retreive
     # all works in the gallery and order them by whatever in order to decide what
     # the "previous" and "next" are.
-    siblings = Work.objects.filter(gallery = work.gallery).order_by(
-        F('happenedDate').desc(nulls_last=True),
-        F('sequenceNum').desc(nulls_last=True)
-    )
+    siblings = Work.objects.filter(gallery = work.gallery)
+    # shared code - factor out to util function
+    prevLinkName = ""
+    nextLinkName = ""
+    # check per-gallery sort-order setting. This affects what works are considered
+    # "previous" and "next", but also affects the link text
+    if work.gallery.sort_order == 'SEQ':
+        siblings = siblings.order_by(F('sequenceNum').asc(nulls_last=True))
+        prevLinkName = "Previous"
+        nextLinkName = "Next"
+    elif work.gallery.sort_order == 'TTL':
+        siblings = siblings.order_by(F('title').asc(nulls_last=True))
+        prevLinkName = "Previous"
+        nextLinkName = "Next"
+    elif work.gallery.sort_order == 'CRO':
+        siblings = siblings.order_by(F('happenedDate').asc(nulls_last=True))
+        prevLinkName = "Older"
+        nextLinkName = "Newer"
+    elif work.gallery.sort_order == 'REV':
+        siblings = siblings.order_by(F('happenedDate').desc(nulls_last=True))
+        prevLinkName = "Newer"
+        nextLinkName = "Older"
 
     siblings = [s for s in siblings]
     myIndex = siblings.index(work)
@@ -185,7 +203,9 @@ def work_page(request, personName, galleryUrlname, workUrlname):
     documents = work.documents.all()
     data = {"person": person, "gallery": work.gallery, "work": work,
             "mine": mine, "body": body, "newerWork": previousWork,
-            "olderWork": nextWork, "documents": unreferenced_documents}
+            "olderWork": nextWork, "documents": unreferenced_documents,
+            "prevLinkName": prevLinkName, "nextLinkName": nextLinkName}
+    # otherwise olderLinkName and newerLinkName should be "Older" and "Newer".
     data["othergalleries"] = Gallery.objects.filter(author = person)
     data["viewer"] = get_viewer(request)
     data["tags"] = ", ".join([t.tagText for t in work.tags.all()])

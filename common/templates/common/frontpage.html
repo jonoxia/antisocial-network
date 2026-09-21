@@ -8,7 +8,7 @@
 
 <table class="frontpage">
   <tr>
-    <td>Latest Comic:</td><td>Latest Music:</td><td>Latest Nature Photos:<br>
+    <th>Latest One-Page Comic:</th><th>Latest Music:</th><th>Latest Nature Photos:</th><br>
   </tr>
   <tr>
     <td>
@@ -46,18 +46,21 @@
     </td>
   </tr>
 
-  <tr>
-    <td>
-      Latest Writing:
-    </td>
-    <td>
-      Latest Tinkering:
-    </td>
-    <td>
-      .
-    </td>
-  </tr>
+  <tr><td>&nbsp;</td></tr>
+  <tr><td>&nbsp;</td></tr>
 
+  <tr>
+    <th>
+      Latest Writing:
+    </th>
+    <th>
+      Latest Tinkering:
+    </th>
+    <th>
+      Latest Long-Form Comic
+    </th>
+  </tr>
+  
   <tr>
     <td>
       <a href="{{ writings.link }}"><h3>{{ writings.title }}</h3></a>
@@ -66,7 +69,7 @@
       <a href="{{ projects.link }}"><h3>{{ projects.title }}</h3></a><br>
     </td>
     <td>
-      .
+      <a href="{{ longform.link }}"><h3>{{ longform.title }}</h3></a><br>
     </td>
   </tr>
       
@@ -81,7 +84,7 @@
       <a href="{{ projects.link }}"><img src="{{ projects.img }}"></a><br>
     </td>
     <td>
-      <a href="/{{ whois }}">About This Site</a>
+      <a href="{{ longform.link }}"><img src="{{ longform.img }}"></a><br>
     </td>
   </tr>
 
@@ -93,11 +96,15 @@
       <a href="{{ projects.gallery_link }}">Tinkering Archive</a>
     </td>
     <td>
-      .
+      <a href="{{ longform.gallery_link }}">Longform Comic Archive</a>
     </td>
   </tr>
 
 </table>
+<br>
+<hr>
+<br>
+<p><a href="/{{ whois }}">About This Site</a></p>
 
 
 {% endblock %}

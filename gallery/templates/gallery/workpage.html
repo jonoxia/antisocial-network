@@ -15,14 +15,14 @@
 
 <div class="navigation">
   {% if newerWork %}
-  <a href="/{{person.publicName}}/{{gallery.urlname}}/{{newerWork.urlname}}">Newer: {{ newerWork.title }}</a>
+  <a href="/{{person.publicName}}/{{gallery.urlname}}/{{newerWork.urlname}}">{{prevLinkName}}: {{ newerWork.title }}</a>
 <!-- easier to implement if we had a URL for getting a work by sequence num -->
   {% endif %}
 &nbsp;&nbsp;
 <a href="/{{person.publicName}}/{{gallery.urlname}}">Back to gallery</a>
 &nbsp;&nbsp;
   {% if olderWork %}
-  <a href="/{{person.publicName}}/{{gallery.urlname}}/{{olderWork.urlname}}">Older: {{ olderWork.title }}</a>
+  <a href="/{{person.publicName}}/{{gallery.urlname}}/{{olderWork.urlname}}">{{nextLinkName}}: {{ olderWork.title }}</a>
   <!-- easier to implement if we had a URL for getting a work by sequence num -->
   {% endif %}
 </div>

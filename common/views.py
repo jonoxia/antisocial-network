@@ -25,7 +25,8 @@ MY_GALLERY_NAMES = {
     "music": "music",
     "projects": "tinkering",
     "writings": "effortposts",
-    "nature_photos": "views-of-nature"
+    "nature_photos": "views-of-nature",
+    "longform": "the-npcs"
 }
 
 def index_page(request):
@@ -53,6 +54,13 @@ def index_page(request):
                 "img": img,
                 "link": link
             })
+
+    front_page_contents["longform"] = {
+        "title": "The NPCs",
+        "img": "",
+        # Change this link when we want to put a different gallery in the long-form spot:
+        "link": "/nindokag/the-npcs-anthology-comic-2026"
+    }
 
     return render(request, 'common/frontpage.html', front_page_contents)
         
