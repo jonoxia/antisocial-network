@@ -105,6 +105,10 @@ table.frontpage td, table.frontpage th {
     border-right: solid grey 2px;
 }
 
+table.frontpage td img {
+    max-width: 300px;
+}
+
 tr.divider td {
     border-bottom: solid grey 2px;
 }
