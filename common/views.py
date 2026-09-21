@@ -9,7 +9,7 @@ from django.conf import settings
 from django.db.models import F
 
 from common.forms import CreateAccountForm
-from gallery.models import Human, Work
+from gallery.models import Human, Work, Gallery
 
 def login_profile_redirect(request):
     # Default page to go to upon login if "next" param is not specified:
@@ -26,7 +26,7 @@ MY_GALLERY_NAMES = {
     "projects": "tinkering",
     "writings": "effortposts",
     "nature_photos": "views-of-nature",
-    "longform": "the-npcs"
+    "longform": "the-npcs-anthology-comic-2026"
 }
 
 def index_page(request):
@@ -60,15 +60,15 @@ def index_page(request):
                 "link": link
             })
 
-    front_page_contents["longform"] = {
-        "title": "The NPCs",
-        "img": "", # Todo set this to a hardcoded url of something from the unused document browser page?
-        # oh, or we could like... give gallery model a thumbnail field, nullable.
-        # Use gallery.thumbnail.docfile.url if available.
-        # Change this link when we want to put a different gallery in the long-form spot:
-        "link": "/nindokag/the-npcs-anthology-comic-2026/page-01",
-        "gallery_link": "/nindokag/the-npcs-anthology-comic-2026"
-    }
+    longform_matches = Gallery.objects.filter(urlname = MY_GALLERY_NAMES["longform"])
+    if longform_matches.count() > 0:
+        longform_gallery = longform_matches[0]
+        front_page_contents["longform"] = {
+            "title": longform_gallery.title,
+            "img": longform_gallery.thumbnail.docfile.url if longform_gallery.thumbnail is not None else None,
+            "link": "/nindokag/the-npcs-anthology-comic-2026/page-01",
+            "gallery_link": "/{}/{}".format( main_username, longform_gallery.urlname)
+        }
 
     return render(request, 'common/frontpage.html', front_page_contents)
         

@@ -55,10 +55,11 @@ class Gallery(models.Model):
     sort_order = models.CharField(max_length=3,
                                   choices=SORT_TYPES,
                                   default="SEQ")
-
     publicity = models.CharField(max_length=3,
                                  choices=PRIVACY_SETTINGS,
                                  default="PRI")
+    # optional gallery thumbnail distinct from any of the work thumbnails in it...
+    thumbnail = models.ForeignKey('Document', null=True, on_delete=models.CASCADE) # TODO different on_delete?
     # a unique-together constraint of author + title?
     class Meta:
         unique_together = ('author', 'urlname')

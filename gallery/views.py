@@ -26,7 +26,8 @@ from gallery.utils import (
     set_tags_on_work,
     associate_documents_to_work,
     check_for_secret_key_login,
-    get_page_num_from_filename
+    get_page_num_from_filename,
+    make_thumbnail
 )
 
 
@@ -147,6 +148,8 @@ def work_page(request, personName, galleryUrlname, workUrlname):
     body = markdown.markdown(work.body) # parse markdown for display
     unreferenced_documents = []
     for document in work.documents.all():
+        # maybe support more placeholders like "{{ thumbnail }}" or
+        # "{{ no images }}"
         # Turn placeholders into image tags.
         placeholder_text = f"{{{{ {document.id} }}}}"
         if placeholder_text in body:
@@ -311,7 +314,7 @@ def edit_gallery(request, personName, galleryUrlname):
         # Don't require all fields to be present, but update any
         # fields that are present:
         # TODO simplify this using the EditGalleryForm
-        form = EditGalleryForm(request.POST)
+        form = EditGalleryForm(request.POST, request.FILES)
         if form.is_valid():
             title = form.cleaned_data["title"]
             if title is not None and title != gallery.title:
@@ -331,6 +334,17 @@ def edit_gallery(request, personName, galleryUrlname):
             sort_order = form.cleaned_data["sort_order"]
             if publicity is not None:
                 gallery.sort_order = sort_order
+
+            if request.FILES["thumbnail"] is not None and gallery.thumbnail is None:
+                rawdoc = Document.objects.create(
+                    docfile = request.FILES["thumbnail"],
+                    filetype = "THU",
+                    owner = person
+                )
+                thumbnail = make_thumbnail(rawdoc)
+                # TODO a way to clear/remove thumbnail if we don't want it anymore?
+                gallery.thumbnail = thumbnail
+                
             gallery.save()
             if errorMsg == "":
                 return redirect("/%s/%s" % (personName, gallery.urlname) )
@@ -340,7 +354,8 @@ def edit_gallery(request, personName, galleryUrlname):
     form = EditGalleryForm(initial = {"title": gallery.title,
                                       "blurb": gallery.blurb,
                                       "publicity": gallery.publicity,
-                                      "sort_order": gallery.sort_order})
+                                      "sort_order": gallery.sort_order,
+                                      "thumbnail": gallery.thumbnail.docfile})
 
     data = {"person": person, "form": form, "errorMsg": errorMsg}
     return render(request, 'gallery/editgallery.html', data)
@@ -471,18 +486,16 @@ def edit_work(request, personName, galleryUrlname, workUrlname):
             # if happened_at isn't empty, parse date, set happened_at.
             # if current thumbnail is null and thumbnail form field is filled in, proc
             # the upload and set that as the thumbnail.
-            print(form.cleaned_data)
-            print(request.FILES)
             if form.cleaned_data["happened_at"] is not None:
                 print("set happened_at to ", form.cleaned_data["happened_at"])
                 work.happenedDate = form.cleaned_data["happened_at"]
             if request.FILES["thumbnail"] is not None and work.thumbnail is None:
-                thumbnail = Document.objects.create(
+                rawdoc = Document.objects.create(
                     docfile = request.FILES["thumbnail"],
                     filetype = "THU",
                     owner = person
                 )
-                compress_image(thumbnail)
+                thumbnail = make_thumbnail(rawdoc)
                 # TODO a way to clear/remove thumbnail if we don't want it anymore?
                 work.thumbnail = thumbnail
 

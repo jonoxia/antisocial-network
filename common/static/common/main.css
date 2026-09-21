@@ -126,3 +126,7 @@ a {
     border-style: solid;
     margin: 1em;
 }
+
+img.thumbnail {
+    max-width: 250px;
+}

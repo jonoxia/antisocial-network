@@ -9,6 +9,11 @@ class EditGalleryForm(forms.Form):
     blurb = forms.CharField(widget = forms.Textarea(), required=False)
     publicity = forms.ChoiceField(choices = PRIVACY_SETTINGS)
     sort_order = forms.ChoiceField(choices = SORT_TYPES)
+    thumbnail = forms.FileField(
+        label = "Pick an image to be the thumbnail",
+        help_text = "",
+        required=False
+    )
     # type = forms.DropDownMenu()
     # theme = forms.DropDownMenu()
 
