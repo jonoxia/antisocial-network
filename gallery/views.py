@@ -71,7 +71,13 @@ def gallery_link_for_work(work, gallery_theme = None):
     }
     # Thumbnail URL if available:
     if work.thumbnail is not None:
-        ret_dict["thumbnail"] = work.thumbnail.docfile.url
+        try:
+            ret_dict["thumbnail"] = work.thumbnail.docfile.url
+            # there seems to be at least one Document that has an invalid docfile attribute,
+            # which raises a ValueError here
+        except ValueError:
+            print("Invalid thumbnail docfile on work {}".format(work.id))
+
     return ret_dict
 
 def gallery_page(request, personName, galleryUrlname):
