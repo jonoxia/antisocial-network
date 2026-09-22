@@ -209,7 +209,8 @@ def work_page(request, personName, galleryUrlname, workUrlname):
             "olderWork": nextWork, "documents": unreferenced_documents,
             "prevLinkName": prevLinkName, "nextLinkName": nextLinkName}
     # otherwise olderLinkName and newerLinkName should be "Older" and "Newer".
-    data["othergalleries"] = Gallery.objects.filter(author = person)
+    data["othergalleries"] = get_allowed_galleries(request, person)
+
     data["viewer"] = get_viewer(request)
     data["tags"] = ", ".join([t.tagText for t in work.tags.all()])
     return render(request, 'gallery/workpage.html', data)
