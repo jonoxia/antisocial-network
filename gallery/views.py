@@ -493,17 +493,34 @@ def edit_work(request, personName, galleryUrlname, workUrlname):
             # if happened_at isn't empty, parse date, set happened_at.
             # if current thumbnail is null and thumbnail form field is filled in, proc
             # the upload and set that as the thumbnail.
+            print("request.FILES:")
+            print( request.FILES )
+            print("request.POST:")
+            print( request.POST )
             if form.cleaned_data["happened_at"] is not None:
                 print("set happened_at to ", form.cleaned_data["happened_at"])
                 work.happenedDate = form.cleaned_data["happened_at"]
-            if "thumbnail" in request.FILES and request.FILES["thumbnail"] is not None and work.thumbnail is None:
+
+            if "thumbnail-clear" in request.POST:
+                # remove if user clicked the "clear" checkbox:
+                if "on" in request.POST["thumbnail-clear"]:
+                    # I think there's probably some django-form interface to this
+                    # that we could use instead of reading it directly out of
+                    # request.POST, but this works...
+                    print("Clearing Thumbnail")
+                    old_thumbnail = work.thumbnail
+                    if old_thumbnail is not None:
+                        old_thumbnail.works.remove(work)
+                        old_thumbnail.delete()
+
+                    work.thumbnail = None
+            elif "thumbnail" in request.FILES and request.FILES["thumbnail"] is not None and work.thumbnail is None:
                 rawdoc = Document.objects.create(
                     docfile = request.FILES["thumbnail"],
                     filetype = "THU",
                     owner = person
                 )
                 thumbnail = make_thumbnail(rawdoc)
-                # TODO a way to clear/remove thumbnail if we don't want it anymore?
                 work.thumbnail = thumbnail
 
             work.save()
