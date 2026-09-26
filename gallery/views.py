@@ -527,6 +527,14 @@ def edit_work(request, personName, galleryUrlname, workUrlname):
 
             # Create associations between the work and any documents referenced by
             # doc placeholders in its body text:
+            if "clear_unused_documents" in form.cleaned_data:
+               if form.cleaned_data["clear_unused_documents"] == True:
+                   # Remove all the many-to-many DB connections between documents
+                   # and this work; the ones still referenced in the body will be
+                   # re-added by associate_documents_to_work.
+                   work.documents.clear()
+                   # wait do we need to re-add thumbnail?
+
             associate_documents_to_work(work)
 
             # Set tags on work:

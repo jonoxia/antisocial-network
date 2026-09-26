@@ -30,6 +30,7 @@ class EditWorkForm(forms.Form):
         required=False
     )
     happened_at = forms.DateField(required=False)
+    clear_unused_documents = forms.BooleanField(required=False)
 
 class NewWorkForm(forms.Form):
     title = forms.CharField(required=False) # title is optional
